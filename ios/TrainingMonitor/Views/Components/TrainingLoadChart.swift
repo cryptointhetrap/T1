@@ -10,7 +10,7 @@ struct TrainingLoadChart: View {
                 x: .value("Date", point.date),
                 y: .value("Acute (7d)", point.acuteLoad)
             )
-            .foregroundStyle(.orange)
+            .foregroundStyle(Color.mdRed)
             .interpolationMethod(.catmullRom)
 
             LineMark(
@@ -21,7 +21,7 @@ struct TrainingLoadChart: View {
             .interpolationMethod(.catmullRom)
         }
         .chartForegroundStyleScale([
-            "Acute (7d)": Color.orange,
+            "Acute (7d)": Color.mdRed,
             "Chronic (28d)": Color.secondary,
         ])
         .chartLegend(position: .bottom)

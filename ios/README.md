@@ -18,6 +18,12 @@ and fed into the coach's context) and Google Calendar (scheduled workouts
 are pushed there as real events, and Claude reads your upcoming events
 back so it can avoid double-booking you).
 
+The whole UI uses one small, deliberate palette: the Maryland state
+flag's gold, red, and black (`Views/Theme.swift`), in place of the
+assorted orange/blue/purple/green/yellow this app used earlier. Strava's
+own "Connect with Strava" button keeps Strava's brand orange per their
+usage guidelines — that one's intentionally not part of the theme.
+
 This project was scaffolded without Xcode (built in a Linux container), so
 it uses [XcodeGen](https://github.com/yonaskolb/XcodeGen) to generate the
 `.xcodeproj` deterministically from `project.yml` rather than shipping a

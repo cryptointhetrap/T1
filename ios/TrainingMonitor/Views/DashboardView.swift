@@ -170,10 +170,10 @@ struct DashboardView: View {
 
     private func color(for status: TrainingStatus) -> Color {
         switch status {
-        case .optimal: return .green
-        case .rampingUp: return .yellow
-        case .highRisk: return .red
-        case .detraining: return .blue
+        case .optimal: return .mdGold
+        case .rampingUp: return .mdRed
+        case .highRisk: return .primary
+        case .detraining: return .secondary
         }
     }
 

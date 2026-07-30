@@ -3,21 +3,21 @@ import SwiftUI
 extension SportCategory {
     var dotColor: Color {
         switch self {
-        case .run: return .orange
-        case .ride: return .blue
+        case .run: return .mdGold
+        case .ride: return .mdRed
         }
     }
 }
 
 extension ScheduledWorkout {
     /// Reuses the completed-activity colors where the sport name overlaps
-    /// (run/ride), falling back to purple for anything else (rest days,
-    /// strength, etc.) so a scheduled workout is still visually distinct.
+    /// (run/ride). Anything else (rest days, strength, etc.) uses `.primary`
+    /// rather than literal black — black-on-black would vanish in dark mode.
     var dotColor: Color {
         let lowercased = sport.lowercased()
-        if lowercased.contains("run") { return .orange }
-        if lowercased.contains("ride") || lowercased.contains("bike") || lowercased.contains("cycl") { return .blue }
-        return .purple
+        if lowercased.contains("run") { return .mdGold }
+        if lowercased.contains("ride") || lowercased.contains("bike") || lowercased.contains("cycl") { return .mdRed }
+        return .primary
     }
 }
 
