@@ -24,7 +24,11 @@ them; a monthly aerobic-efficiency trend per sport (real power-per-
 heartbeat for rides with a power meter, speed-per-heartbeat otherwise)
 once there's a few months of data; and a Recent PRs list of any run
 effort Strava currently ranks in your all-time top 3, found among your
-most recently synced runs. The Coach tab has a free-text goals &
+most recently synced runs. A "Longest Efforts" row on the Training tab
+opens a separate page ranking your top 10 longest runs and top 10 longest
+rides across your entire Strava history (not just the ~370-day window
+everything else on the dashboard uses). The Coach tab has a free-text
+goals &
 preferences box (target-icon button) for anything you want the coach to
 factor in — races, equipment, recovery tools, blackout days, injuries.
 The Calendar tab can hand you a subscribable `.ics` feed URL (share-icon

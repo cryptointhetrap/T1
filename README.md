@@ -73,6 +73,9 @@ app short-lived tokens.
   that have them and factored into the efficiency trend above
 - Recent PRs: surfaces any run effort Strava currently ranks in your
   all-time top 3 for its distance, among your most recently synced runs
+- Longest Efforts (separate page, linked from the Training tab): your
+  top 10 longest-distance runs and top 10 longest-distance rides, across
+  your entire Strava history
 - Goals & preferences: an open free-text box (Coach tab, target-icon
   button) for anything the coach should know — races, equipment, recovery
   tools, blackout days, injuries — sent along with every chat message

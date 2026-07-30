@@ -23,7 +23,8 @@ struct RootView: View {
                         viewModel: dashboardViewModel,
                         healthViewModel: healthViewModel,
                         calendarViewModel: calendarViewModel,
-                        intervalsICUViewModel: intervalsICUViewModel
+                        intervalsICUViewModel: intervalsICUViewModel,
+                        apiClient: apiClient
                     )
                     .tabItem { Label("Training", systemImage: "chart.bar") }
                     CalendarView(

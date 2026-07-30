@@ -5,15 +5,17 @@ struct DashboardView: View {
     @ObservedObject private var healthViewModel: HealthViewModel
     @ObservedObject private var calendarViewModel: GoogleCalendarViewModel
     @ObservedObject private var intervalsICUViewModel: IntervalsICUViewModel
+    let apiClient: StravaAPIClient
     @EnvironmentObject private var authManager: StravaAuthManager
     @Environment(\.scenePhase) private var scenePhase
     @State private var showIntervalsSettings = false
 
-    init(viewModel: DashboardViewModel, healthViewModel: HealthViewModel, calendarViewModel: GoogleCalendarViewModel, intervalsICUViewModel: IntervalsICUViewModel) {
+    init(viewModel: DashboardViewModel, healthViewModel: HealthViewModel, calendarViewModel: GoogleCalendarViewModel, intervalsICUViewModel: IntervalsICUViewModel, apiClient: StravaAPIClient) {
         _viewModel = StateObject(wrappedValue: viewModel)
         self.healthViewModel = healthViewModel
         self.calendarViewModel = calendarViewModel
         self.intervalsICUViewModel = intervalsICUViewModel
+        self.apiClient = apiClient
     }
 
     var body: some View {
@@ -58,6 +60,22 @@ struct DashboardView: View {
                         section(title: "Recent PRs") {
                             PersonalRecordsList(records: viewModel.recentPersonalRecords)
                         }
+                    }
+
+                    NavigationLink {
+                        LongestEffortsView(apiClient: apiClient)
+                    } label: {
+                        HStack {
+                            Label("Longest Efforts", systemImage: "ruler")
+                                .font(.headline)
+                                .foregroundStyle(.primary)
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding()
+                        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14))
                     }
 
                     section(title: "Recent activities") {
