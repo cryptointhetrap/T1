@@ -87,9 +87,23 @@ final class StravaAuthManager: NSObject, ObservableObject {
 
         if current.isExpired {
             let tokens = try await BackendClient.refresh(refreshToken: current.refreshToken)
-            current = StravaSession(tokenResponse: tokens)
-            KeychainStore.save(current)
-            session = current
+            var refreshed = StravaSession(tokenResponse: tokens)
+            // Strava's refresh grant doesn't echo back the `athlete` object
+            // (only the initial authorization-code exchange does), so
+            // without this, `athleteID` would silently go nil on every
+            // refresh — breaking anything keyed on it (webhook status
+            // checks, group comparison).
+            if refreshed.athleteID == nil {
+                refreshed = StravaSession(
+                    accessToken: refreshed.accessToken,
+                    refreshToken: refreshed.refreshToken,
+                    expiresAt: refreshed.expiresAt,
+                    athleteID: current.athleteID
+                )
+            }
+            KeychainStore.save(refreshed)
+            session = refreshed
+            current = refreshed
         }
 
         return current.accessToken

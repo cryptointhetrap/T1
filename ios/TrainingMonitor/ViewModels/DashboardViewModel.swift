@@ -88,6 +88,10 @@ final class DashboardViewModel: ObservableObject {
     /// full historical PR list — see the doc comment on
     /// `refreshPersonalRecords` for why.
     @Published private(set) var recentPersonalRecords: [BestEffort] = []
+    /// This calendar month's relative effort, hours, and mileage across
+    /// every activity (not just run/ride) — what gets pushed to a joined
+    /// group for comparison. `nil` until the first successful refresh.
+    @Published private(set) var currentMonthGroupStats: GroupMemberStats?
     @Published private(set) var isLoading = false
     @Published var errorMessage: String?
 
@@ -141,6 +145,7 @@ final class DashboardViewModel: ObservableObject {
             recentActivities = activities.sorted { $0.startDateLocal > $1.startDateLocal }
             weeklySummaries = Self.buildWeeklySummaries(from: activities)
             sportTotals = Self.buildSportTotals(from: activities)
+            currentMonthGroupStats = Self.buildGroupStats(from: activities)
             efficiencyTrend = Self.buildEfficiencyTrend(from: activities, months: efficiencyTrendMonths)
             let series = Self.buildLoadSeries(from: activities, days: loadTrendDays)
             loadSeries = series
@@ -202,6 +207,22 @@ final class DashboardViewModel: ObservableObject {
             )
         }
         return result
+    }
+
+    /// Relative effort (Strava's suffer score, falling back to moving-time
+    /// minutes when it's unavailable — same proxy `buildLoadSeries` uses),
+    /// hours, and mileage summed across every activity this calendar
+    /// month, regardless of sport.
+    private static func buildGroupStats(from activities: [StravaActivity]) -> GroupMemberStats {
+        let calendar = Calendar.current
+        let now = Date()
+        let monthStart = calendar.dateInterval(of: .month, for: now)?.start ?? now
+        let monthActivities = activities.filter { $0.startDateLocal >= monthStart }
+
+        let relativeEffort = monthActivities.reduce(0.0) { $0 + ($1.sufferScore ?? Double($1.movingTime) / 60) }
+        let hours = Double(monthActivities.reduce(0) { $0 + $1.movingTime }) / 3600
+        let miles = Units.miles(fromMeters: monthActivities.reduce(0) { $0 + $1.distance })
+        return GroupMemberStats(relativeEffort: relativeEffort, hours: hours, miles: miles)
     }
 
     private static func totals(for activities: [StravaActivity], since: Date) -> PeriodTotals {

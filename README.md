@@ -76,6 +76,12 @@ app short-lived tokens.
 - Longest Efforts (separate page, linked from the Training tab): your
   top 10 longest-distance runs and top 10 longest-distance rides, across
   your entire Strava history
+- Compare (separate page, linked from the Training tab): create or join a
+  small invite-code group with people who also use this app, and see
+  everyone's current-month relative effort, hours, and mileage side by
+  side. Not a public Strava leaderboard — Strava's API has no athlete
+  search and no way to read a stranger's data, so this only works among
+  people who separately connect their own Strava account and share a code
 - Goals & preferences: an open free-text box (Coach tab, target-icon
   button) for anything the coach should know — races, equipment, recovery
   tools, blackout days, injuries — sent along with every chat message

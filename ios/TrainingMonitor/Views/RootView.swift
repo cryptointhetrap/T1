@@ -24,7 +24,8 @@ struct RootView: View {
                         healthViewModel: healthViewModel,
                         calendarViewModel: calendarViewModel,
                         intervalsICUViewModel: intervalsICUViewModel,
-                        apiClient: apiClient
+                        apiClient: apiClient,
+                        athleteID: authManager.session?.athleteID
                     )
                     .tabItem { Label("Training", systemImage: "chart.bar") }
                     CalendarView(

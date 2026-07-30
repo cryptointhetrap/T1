@@ -5,17 +5,26 @@ struct DashboardView: View {
     @ObservedObject private var healthViewModel: HealthViewModel
     @ObservedObject private var calendarViewModel: GoogleCalendarViewModel
     @ObservedObject private var intervalsICUViewModel: IntervalsICUViewModel
+    @StateObject private var groupCompareViewModel: GroupCompareViewModel
     let apiClient: StravaAPIClient
     @EnvironmentObject private var authManager: StravaAuthManager
     @Environment(\.scenePhase) private var scenePhase
     @State private var showIntervalsSettings = false
 
-    init(viewModel: DashboardViewModel, healthViewModel: HealthViewModel, calendarViewModel: GoogleCalendarViewModel, intervalsICUViewModel: IntervalsICUViewModel, apiClient: StravaAPIClient) {
+    init(
+        viewModel: DashboardViewModel,
+        healthViewModel: HealthViewModel,
+        calendarViewModel: GoogleCalendarViewModel,
+        intervalsICUViewModel: IntervalsICUViewModel,
+        apiClient: StravaAPIClient,
+        athleteID: Int?
+    ) {
         _viewModel = StateObject(wrappedValue: viewModel)
         self.healthViewModel = healthViewModel
         self.calendarViewModel = calendarViewModel
         self.intervalsICUViewModel = intervalsICUViewModel
         self.apiClient = apiClient
+        _groupCompareViewModel = StateObject(wrappedValue: GroupCompareViewModel(athleteID: athleteID))
     }
 
     var body: some View {
@@ -65,17 +74,13 @@ struct DashboardView: View {
                     NavigationLink {
                         LongestEffortsView(apiClient: apiClient)
                     } label: {
-                        HStack {
-                            Label("Longest Efforts", systemImage: "ruler")
-                                .font(.headline)
-                                .foregroundStyle(.primary)
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                        .padding()
-                        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14))
+                        recordsRowLabel(title: "Longest Efforts", systemImage: "ruler")
+                    }
+
+                    NavigationLink {
+                        GroupCompareView(viewModel: groupCompareViewModel)
+                    } label: {
+                        recordsRowLabel(title: "Compare", systemImage: "person.2")
                     }
 
                     section(title: "Recent activities") {
@@ -138,6 +143,10 @@ struct DashboardView: View {
             .onChange(of: scenePhase) { newPhase in
                 guard newPhase == .active, let athleteID = authManager.session?.athleteID else { return }
                 Task { await viewModel.refreshIfNewActivity(athleteID: athleteID) }
+            }
+            .onChange(of: viewModel.currentMonthGroupStats) { stats in
+                guard let stats else { return }
+                groupCompareViewModel.updateStats(stats)
             }
             .overlay {
                 if viewModel.isLoading && viewModel.recentActivities.isEmpty {
@@ -257,5 +266,19 @@ struct DashboardView: View {
                 .font(.headline)
             content()
         }
+    }
+
+    private func recordsRowLabel(title: String, systemImage: String) -> some View {
+        HStack {
+            Label(title, systemImage: systemImage)
+                .font(.headline)
+                .foregroundStyle(.primary)
+            Spacer()
+            Image(systemName: "chevron.right")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .padding()
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14))
     }
 }

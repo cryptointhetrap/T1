@@ -26,6 +26,18 @@ and the **Anthropic API key** out of the iOS app.
   Calendar "private address" link. Data is written to
   `FEED_DATA_DIR` (defaults to `./data/feeds`) as one small JSON file per
   token; delete a file to wipe that feed.
+- `POST /groups` / `GET /groups/:code` / `PUT
+  /groups/:code/members/:athleteID` / `DELETE
+  /groups/:code/members/:athleteID` — small invite-code groups for the
+  in-app "Compare" page, where athletes who separately connect their own
+  Strava account to this app can compare relative effort, hours, and
+  mileage for the current month. Strava's API has no athlete search and
+  no way to read another athlete's data at all, so this is deliberately
+  not a public leaderboard — just people who share a 6-character code.
+  There's no login: whoever has the code can join or read the group,
+  the same trust model as the `.ics` feed token above. Data lives in
+  `GROUPS_DATA_DIR` (defaults to `./data/groups`) as one JSON file per
+  group.
 - `GET /webhooks/strava` / `POST /webhooks/strava` / `GET
   /webhooks/strava/status/:athleteID` — Strava webhook plumbing. The first
   two are Strava calling *this backend*: a one-time subscription-
@@ -79,13 +91,14 @@ Set `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET`, `ANTHROPIC_API_KEY`, and
 app's `backendBaseURL` (in `ios/TrainingMonitor/Config/AppConfig.swift`) at
 the deployed URL.
 
-If you want the `.ics` calendar feed or webhook event cache to survive
-redeploys, mount a persistent volume and point `FEED_DATA_DIR` /
-`WEBHOOK_DATA_DIR` at it — otherwise they're just small JSON files on
-local disk and get wiped on a platform that uses ephemeral filesystems
-(fine for personal use; the feed repopulates next time the app saves a
-workout, and webhook status just goes back to "unknown" until the next
-event arrives).
+If you want the `.ics` calendar feed, webhook event cache, or compare
+groups to survive redeploys, mount a persistent volume and point
+`FEED_DATA_DIR` / `WEBHOOK_DATA_DIR` / `GROUPS_DATA_DIR` at it —
+otherwise they're just small JSON files on local disk and get wiped on a
+platform that uses ephemeral filesystems (fine for personal use; the feed
+repopulates next time the app saves a workout, webhook status just goes
+back to "unknown" until the next event arrives, and a wiped group means
+whoever created it has to create a new one and re-share the code).
 
 ## Strava app configuration
 

@@ -27,7 +27,11 @@ effort Strava currently ranks in your all-time top 3, found among your
 most recently synced runs. A "Longest Efforts" row on the Training tab
 opens a separate page ranking your top 10 longest runs and top 10 longest
 rides across your entire Strava history (not just the ~370-day window
-everything else on the dashboard uses). The Coach tab has a free-text
+everything else on the dashboard uses). A "Compare" row opens a page for
+creating or joining a small invite-code group with other TrainingMonitor
+users, to see everyone's current-month relative effort, hours, and
+mileage side by side — see *Compare groups* below for why this isn't a
+general Strava leaderboard. The Coach tab has a free-text
 goals &
 preferences box (target-icon button) for anything you want the coach to
 factor in — races, equipment, recovery tools, blackout days, injuries.
@@ -135,6 +139,23 @@ schema — if a field silently reads as missing, it likely means
 intervals.icu renamed or moved it and `IntervalsWellness` in
 `Models/IntervalsICUModels.swift` needs a small update.
 
+### Compare groups
+
+No console setup, no accounts, no login — the Compare page lets you
+create a group (get a 6-character code back) or join one someone shared
+with you. Whoever holds the code can join or read the group; that's the
+entire access model, appropriate for sharing with people you actually
+know, not a public product. This exists because Strava's API doesn't
+support what a real cross-Strava leaderboard would need: there's no
+athlete search endpoint, and no way to read another athlete's activity
+data unless they've personally authorized your specific app via OAuth —
+so "compare with any Strava user" genuinely isn't buildable, and this is
+the closest legitimate substitute. Each connected athlete's relative
+effort, hours, and mileage for the current calendar month get pushed to
+the group automatically whenever the Training tab refreshes (best-effort,
+silent) — see `ViewModels/GroupCompareViewModel.swift` and
+`backend/src/routes/groups.ts`.
+
 ### Calendar feed (`.ics`)
 
 The Calendar tab's share-icon button shows a subscription URL
@@ -175,13 +196,14 @@ TrainingMonitor/
   App/            App entry point (@main)
   Config/         Client ID / backend URL constants
   Models/         Codable Strava/Google API models, unit conversions
-  Services/       Keychain, Strava + Google + Intervals.icu clients,
-                  backend client, webhook status polling, coach chat
-                  client, local scheduled-workout store + calendar feed
-                  uploads, HealthKit manager, free-text preferences store
+  Services/       Keychain, Strava + Google + Intervals.icu + Groups
+                  clients, backend client, webhook status polling, coach
+                  chat client, local scheduled-workout store + calendar
+                  feed uploads, HealthKit manager, free-text preferences
+                  store, group membership store
   ViewModels/      Training-load + efficiency aggregation, calendar month
                   pagination, coach chat, Health, Google Calendar,
-                  Intervals.icu
+                  Intervals.icu, longest efforts, group compare
   Views/          SwiftUI screens and chart components
 ```
 
