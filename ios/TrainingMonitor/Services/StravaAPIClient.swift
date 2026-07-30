@@ -15,21 +15,27 @@ final class StravaAPIClient {
         self.authManager = authManager
     }
 
-    /// Fetches activities starting from `after` up to `perPage` per page,
-    /// following pagination until an empty page is returned.
-    func fetchActivities(after: Date, perPage: Int = 100) async throws -> [StravaActivity] {
+    /// Fetches activities starting from `after` (and, if given, strictly
+    /// before `before`) up to `perPage` per page, following pagination until
+    /// a short page is returned. Passing a narrow `after`/`before` range
+    /// (e.g. one calendar month) is how the calendar screen pages
+    /// arbitrarily far into the past without ever fetching the athlete's
+    /// entire history at once.
+    func fetchActivities(after: Date, before: Date? = nil, perPage: Int = 100) async throws -> [StravaActivity] {
         var all: [StravaActivity] = []
         var page = 1
 
         while true {
-            let pageResults: [StravaActivity] = try await get(
-                path: "athlete/activities",
-                query: [
-                    URLQueryItem(name: "after", value: String(Int(after.timeIntervalSince1970))),
-                    URLQueryItem(name: "per_page", value: String(perPage)),
-                    URLQueryItem(name: "page", value: String(page)),
-                ]
-            )
+            var query = [
+                URLQueryItem(name: "after", value: String(Int(after.timeIntervalSince1970))),
+                URLQueryItem(name: "per_page", value: String(perPage)),
+                URLQueryItem(name: "page", value: String(page)),
+            ]
+            if let before {
+                query.append(URLQueryItem(name: "before", value: String(Int(before.timeIntervalSince1970))))
+            }
+
+            let pageResults: [StravaActivity] = try await get(path: "athlete/activities", query: query)
             all.append(contentsOf: pageResults)
             if pageResults.count < perPage { break }
             page += 1

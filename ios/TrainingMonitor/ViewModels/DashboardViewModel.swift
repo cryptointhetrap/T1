@@ -36,7 +36,7 @@ enum SportCategory: String, CaseIterable, Identifiable {
         }
     }
 
-    fileprivate static func matching(_ activity: StravaActivity) -> SportCategory? {
+    static func matching(_ activity: StravaActivity) -> SportCategory? {
         if activity.type.contains("Run") { return .run }
         if activity.type.contains("Ride") { return .ride }
         return nil

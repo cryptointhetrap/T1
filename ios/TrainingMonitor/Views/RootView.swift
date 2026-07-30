@@ -6,7 +6,13 @@ struct RootView: View {
     var body: some View {
         Group {
             if authManager.isConnected {
-                DashboardView(viewModel: DashboardViewModel(apiClient: StravaAPIClient(authManager: authManager)))
+                let apiClient = StravaAPIClient(authManager: authManager)
+                TabView {
+                    DashboardView(viewModel: DashboardViewModel(apiClient: apiClient))
+                        .tabItem { Label("Training", systemImage: "chart.bar") }
+                    CalendarView(viewModel: CalendarViewModel(apiClient: apiClient))
+                        .tabItem { Label("Calendar", systemImage: "calendar") }
+                }
             } else {
                 ConnectStravaView()
             }

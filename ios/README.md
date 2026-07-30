@@ -3,8 +3,11 @@
 A SwiftUI app that connects to Strava and shows a training load / trends
 dashboard: weekly volume (distance/time/elevation), a Bike & Run section
 with weekly/monthly/yearly mileage and elevation gain per sport, a 7-day
-vs 28-day acute:chronic load trend, and a recent activities list. Distances
-are shown in miles, elevation gain in feet.
+vs 28-day acute:chronic load trend, and a recent activities list. A second
+tab is an activity calendar that scrolls back through your entire Strava
+history, month by month, with a dot per day for each sport you did that
+day — tap a day to see its activities. Distances are shown in miles,
+elevation gain in feet.
 
 This project was scaffolded without Xcode (built in a Linux container), so
 it uses [XcodeGen](https://github.com/yonaskolb/XcodeGen) to generate the
@@ -59,9 +62,10 @@ itself (Strava mobile OAuth allows custom URL scheme callbacks).
 TrainingMonitor/
   App/            App entry point (@main)
   Config/         Client ID / backend URL constants
-  Models/         Codable Strava API models
+  Models/         Codable Strava API models, unit conversions
   Services/       Keychain, OAuth, backend client, Strava API client
-  ViewModels/      Training-load aggregation (weekly + acute:chronic)
+  ViewModels/      Training-load aggregation (weekly + acute:chronic),
+                  calendar month pagination
   Views/          SwiftUI screens and chart components
 ```
 

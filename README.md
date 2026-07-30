@@ -38,6 +38,9 @@ app short-lived tokens.
 - Training load trend: 7-day (acute) vs 28-day (chronic) rolling load, with
   a simple status readout (ramping up / optimal / high load / detraining)
 - Recent activities list
+- Activity calendar: scrolls back through your entire history month by
+  month (no fixed cutoff), with a colored dot per sport on days you were
+  active; tap a day to see what you did
 
 ## What's next
 
