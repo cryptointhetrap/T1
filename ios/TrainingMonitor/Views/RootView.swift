@@ -2,6 +2,7 @@ import SwiftUI
 
 struct RootView: View {
     @EnvironmentObject private var authManager: StravaAuthManager
+    @StateObject private var scheduledWorkoutStore = ScheduledWorkoutStore()
 
     var body: some View {
         Group {
@@ -11,9 +12,9 @@ struct RootView: View {
                 TabView {
                     DashboardView(viewModel: dashboardViewModel)
                         .tabItem { Label("Training", systemImage: "chart.bar") }
-                    CalendarView(viewModel: CalendarViewModel(apiClient: apiClient))
+                    CalendarView(viewModel: CalendarViewModel(apiClient: apiClient), scheduledWorkoutStore: scheduledWorkoutStore)
                         .tabItem { Label("Calendar", systemImage: "calendar") }
-                    CoachChatView(viewModel: CoachChatViewModel(dashboardViewModel: dashboardViewModel))
+                    CoachChatView(viewModel: CoachChatViewModel(dashboardViewModel: dashboardViewModel, scheduledWorkoutStore: scheduledWorkoutStore))
                         .tabItem { Label("Coach", systemImage: "bubble.left.and.bubble.right") }
                 }
             } else {

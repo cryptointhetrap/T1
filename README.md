@@ -46,7 +46,9 @@ app short-lived tokens.
   active; tap a day to see what you did
 - Coach chat: ask Claude about your workouts and training trends — it's
   grounded in the same weekly/monthly/yearly stats and recent activities
-  shown in the Training tab
+  shown in the Training tab. Claude can also add, move, or cancel
+  scheduled (future) workouts on your behalf, which then show up as
+  hollow markers on the Calendar tab alongside completed activities
 
 ## What's next
 

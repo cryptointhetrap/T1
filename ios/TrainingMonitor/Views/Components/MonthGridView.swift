@@ -9,9 +9,22 @@ extension SportCategory {
     }
 }
 
+extension ScheduledWorkout {
+    /// Reuses the completed-activity colors where the sport name overlaps
+    /// (run/ride), falling back to purple for anything else (rest days,
+    /// strength, etc.) so a scheduled workout is still visually distinct.
+    var dotColor: Color {
+        let lowercased = sport.lowercased()
+        if lowercased.contains("run") { return .orange }
+        if lowercased.contains("ride") || lowercased.contains("bike") || lowercased.contains("cycl") { return .blue }
+        return .purple
+    }
+}
+
 struct MonthGridView: View {
     let month: CalendarMonth
     let activities: (Date) -> [StravaActivity]
+    let scheduledWorkouts: (Date) -> [ScheduledWorkout]
     let onSelectDay: (Date) -> Void
 
     private let calendar = Calendar.current
@@ -34,7 +47,7 @@ struct MonthGridView: View {
                 }
 
                 ForEach(daysInMonth, id: \.self) { day in
-                    DayCell(day: day, activities: activities(day))
+                    DayCell(day: day, activities: activities(day), scheduledWorkouts: scheduledWorkouts(day))
                         .onTapGesture { onSelectDay(day) }
                 }
             }
@@ -55,6 +68,7 @@ struct MonthGridView: View {
 private struct DayCell: View {
     let day: Date
     let activities: [StravaActivity]
+    let scheduledWorkouts: [ScheduledWorkout]
 
     var body: some View {
         VStack(spacing: 3) {
@@ -68,6 +82,11 @@ private struct DayCell: View {
                 ForEach(sportsPresent) { category in
                     Circle()
                         .fill(category.dotColor)
+                        .frame(width: 5, height: 5)
+                }
+                ForEach(scheduledWorkouts) { workout in
+                    Circle()
+                        .stroke(workout.dotColor, lineWidth: 1)
                         .frame(width: 5, height: 5)
                 }
             }

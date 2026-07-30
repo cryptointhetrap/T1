@@ -2,10 +2,12 @@ import SwiftUI
 
 struct CalendarView: View {
     @StateObject private var viewModel: CalendarViewModel
+    @ObservedObject private var scheduledWorkoutStore: ScheduledWorkoutStore
     @State private var selectedDay: SelectedDay?
 
-    init(viewModel: CalendarViewModel) {
+    init(viewModel: CalendarViewModel, scheduledWorkoutStore: ScheduledWorkoutStore) {
         _viewModel = StateObject(wrappedValue: viewModel)
+        self.scheduledWorkoutStore = scheduledWorkoutStore
     }
 
     var body: some View {
@@ -16,6 +18,7 @@ struct CalendarView: View {
                         MonthGridView(
                             month: month,
                             activities: viewModel.activities(on:),
+                            scheduledWorkouts: scheduledWorkoutStore.workouts(on:),
                             onSelectDay: { selectedDay = SelectedDay(date: $0) }
                         )
                         .task { await viewModel.loadIfNeeded(month: month) }
@@ -31,7 +34,12 @@ struct CalendarView: View {
             }
             .navigationTitle("Calendar")
             .sheet(item: $selectedDay) { selected in
-                DayActivitiesView(day: selected.date, activities: viewModel.activities(on: selected.date))
+                DayActivitiesView(
+                    day: selected.date,
+                    activities: viewModel.activities(on: selected.date),
+                    scheduledWorkouts: scheduledWorkoutStore.workouts(on: selected.date),
+                    onDeleteScheduled: { scheduledWorkoutStore.delete(id: $0) }
+                )
             }
         }
     }

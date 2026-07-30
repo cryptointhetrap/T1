@@ -8,7 +8,12 @@ and the **Anthropic API key** out of the iOS app.
 - `POST /auth/refresh` — exchanges a stored `refresh_token` for a fresh
   `access_token` once the old one expires.
 - `POST /chat/coach` — forwards a chat conversation plus a training-data
-  summary to Claude and returns its reply.
+  summary to Claude and returns its reply as structured JSON: a `reply`
+  string plus an `actions` array the athlete's device applies to its
+  locally-stored scheduled workouts (add/update/delete). This endpoint
+  holds no schedule data itself — the device sends its current schedule
+  as part of the request context, and Claude's proposed changes travel
+  back the same way.
 
 Everything else (activities, athlete stats, etc.) is called by the iOS app
 **directly against the Strava API** using the `access_token` returned here —
