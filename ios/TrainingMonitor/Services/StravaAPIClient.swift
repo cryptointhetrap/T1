@@ -44,6 +44,15 @@ final class StravaAPIClient {
         return all
     }
 
+    /// One activity's full detail, including `best_efforts` — not present
+    /// on the list endpoint used by `fetchActivities`, so this is a
+    /// separate per-activity call. Callers should use it sparingly (e.g.
+    /// only for a bounded window of recent activities) rather than for the
+    /// athlete's entire history.
+    func fetchActivityDetail(id: Int) async throws -> StravaActivityDetail {
+        try await get(path: "activities/\(id)", query: [])
+    }
+
     private func get<T: Decodable>(path: String, query: [URLQueryItem]) async throws -> T {
         var components = URLComponents(url: baseURL.appendingPathComponent(path), resolvingAgainstBaseURL: false)!
         components.queryItems = query

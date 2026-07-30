@@ -46,13 +46,16 @@ enum SportCategory: String, CaseIterable, Identifiable {
 struct EfficiencyPoint: Identifiable {
     let id: Date // month start
     let monthStart: Date
-    /// Average speed (m/s) divided by average heart rate (bpm) for the
-    /// month — a rough "aerobic efficiency" proxy: it rises as the same
-    /// heart rate produces more speed, similar in spirit to the
-    /// power-per-heartbeat "efficiency factor" cycling coaches track, but
-    /// computed from Strava's activity summaries rather than full
-    /// power/HR streams, so it isn't adjusted for terrain, wind, or heat.
+    /// For rides with a real power meter (`deviceWatts == true`), this is
+    /// Coggan's "Efficiency Factor" — weighted-average watts divided by
+    /// average heart rate, the standard cycling-coach metric. Otherwise
+    /// (runs, or rides without a power meter) it falls back to average
+    /// speed (m/s) divided by average heart rate — a rougher proxy with
+    /// the same "more output per heartbeat is better" shape. Either way
+    /// it's from Strava's activity summaries, not full streams, so it
+    /// isn't adjusted for terrain, wind, or heat.
     let efficiencyFactor: Double
+    let usedPower: Bool
 }
 
 struct PeriodTotals {
@@ -80,6 +83,11 @@ final class DashboardViewModel: ObservableObject {
     @Published private(set) var trainingStatus: TrainingStatus?
     @Published private(set) var sportTotals: [SportCategory: SportTotals] = [:]
     @Published private(set) var efficiencyTrend: [SportCategory: [EfficiencyPoint]] = [:]
+    /// Best efforts Strava currently ranks in the athlete's all-time top 3
+    /// for their distance, found among recently-fetched run details. Not a
+    /// full historical PR list — see the doc comment on
+    /// `refreshPersonalRecords` for why.
+    @Published private(set) var recentPersonalRecords: [BestEffort] = []
     @Published private(set) var isLoading = false
     @Published var errorMessage: String?
 
@@ -91,9 +99,35 @@ final class DashboardViewModel: ObservableObject {
     private let loadTrendDays = 90
     /// How far back the aerobic efficiency trend looks.
     private let efficiencyTrendMonths = 6
+    /// How many of the most recent runs to fetch full detail for, per
+    /// refresh, in search of best efforts. Bounds the extra API calls.
+    private let personalRecordLookbackCount = 20
+    private var fetchedDetailActivityIDs: Set<Int> = []
 
     init(apiClient: StravaAPIClient) {
         self.apiClient = apiClient
+    }
+
+    /// Checks the backend's cheap webhook-status endpoint and, only if
+    /// there's a new event since the last time this device checked for
+    /// this athlete, does a full `refresh()`. Meant to be called when the
+    /// app comes to the foreground, as a much lighter alternative to
+    /// always re-fetching the whole activity list on every foreground.
+    /// Best-effort: any failure just means the caller's usual refresh
+    /// cadence (pull-to-refresh, tab appearance) is the fallback.
+    func refreshIfNewActivity(athleteID: Int) async {
+        guard let latestEventAt = try? await WebhookStatusClient.latestEventAt(athleteID: athleteID) else { return }
+
+        let key = Self.lastSeenEventKey(athleteID: athleteID)
+        let lastSeen = UserDefaults.standard.object(forKey: key) as? Date
+        guard lastSeen == nil || latestEventAt > lastSeen! else { return }
+
+        UserDefaults.standard.set(latestEventAt, forKey: key)
+        await refresh()
+    }
+
+    private static func lastSeenEventKey(athleteID: Int) -> String {
+        "com.trainingmonitor.app.last-seen-webhook-event.\(athleteID)"
     }
 
     func refresh() async {
@@ -114,6 +148,7 @@ final class DashboardViewModel: ObservableObject {
                 acuteChronicRatio = latest.acuteLoad / latest.chronicLoad
                 trainingStatus = Self.status(forRatio: latest.acuteLoad / latest.chronicLoad)
             }
+            await refreshPersonalRecords(from: activities)
         } catch {
             errorMessage = "Couldn't load your activities: \(error.localizedDescription)"
         }
@@ -215,10 +250,24 @@ final class DashboardViewModel: ObservableObject {
         return points
     }
 
-    /// Monthly average "speed per heartbeat" per sport, over activities
-    /// that have both a heart rate and a speed recorded. Skips a sport
-    /// entirely if fewer than two months have data — one point isn't a
-    /// trend.
+    /// Per-activity efficiency factor: real power-per-heartbeat when a
+    /// power meter was used (rides only), otherwise speed-per-heartbeat.
+    /// Returns `nil` for activities missing whatever it needs.
+    private static func efficiencyFactor(for activity: StravaActivity) -> (value: Double, usedPower: Bool)? {
+        guard let heartrate = activity.averageHeartrate, heartrate > 0 else { return nil }
+
+        if activity.deviceWatts == true, let watts = activity.weightedAverageWatts ?? activity.averageWatts, watts > 0 {
+            return (watts / heartrate, true)
+        }
+        if let speed = activity.averageSpeed, speed > 0 {
+            return (speed / heartrate, false)
+        }
+        return nil
+    }
+
+    /// Monthly average efficiency factor per sport (see `EfficiencyPoint`).
+    /// Skips a sport entirely if fewer than two months have data — one
+    /// point isn't a trend.
     private static func buildEfficiencyTrend(from activities: [StravaActivity], months: Int) -> [SportCategory: [EfficiencyPoint]] {
         let calendar = Calendar.current
         guard let cutoff = calendar.date(byAdding: .month, value: -months, to: Date()) else { return [:] }
@@ -228,8 +277,7 @@ final class DashboardViewModel: ObservableObject {
             let matched = activities.filter {
                 SportCategory.matching($0) == category &&
                 $0.startDateLocal >= cutoff &&
-                ($0.averageHeartrate ?? 0) > 0 &&
-                ($0.averageSpeed ?? 0) > 0
+                efficiencyFactor(for: $0) != nil
             }
             guard !matched.isEmpty else { continue }
 
@@ -238,13 +286,11 @@ final class DashboardViewModel: ObservableObject {
             }
 
             let points = grouped.compactMap { monthStart, monthActivities -> EfficiencyPoint? in
-                let factors = monthActivities.compactMap { activity -> Double? in
-                    guard let speed = activity.averageSpeed, let heartrate = activity.averageHeartrate, heartrate > 0 else { return nil }
-                    return speed / heartrate
-                }
+                let factors = monthActivities.compactMap { efficiencyFactor(for: $0) }
                 guard !factors.isEmpty else { return nil }
-                let average = factors.reduce(0, +) / Double(factors.count)
-                return EfficiencyPoint(id: monthStart, monthStart: monthStart, efficiencyFactor: average)
+                let average = factors.map(\.value).reduce(0, +) / Double(factors.count)
+                let usedPower = factors.contains { $0.usedPower }
+                return EfficiencyPoint(id: monthStart, monthStart: monthStart, efficiencyFactor: average, usedPower: usedPower)
             }
             .sorted { $0.monthStart < $1.monthStart }
 
@@ -253,6 +299,56 @@ final class DashboardViewModel: ObservableObject {
             }
         }
         return result
+    }
+
+    /// Strava computes `pr_rank` (top-3-all-time) per effort at upload
+    /// time, but only exposes it on the per-activity detail endpoint, not
+    /// the activity-list summaries `refresh()` already has. Backfilling
+    /// every run in "goes back forever" history would mean thousands of
+    /// extra API calls, so instead this looks at only the most recent
+    /// `personalRecordLookbackCount` runs (fetching each activity's detail
+    /// exactly once, ever — `fetchedDetailActivityIDs` skips repeats on
+    /// later refreshes) and keeps whatever current top-3 efforts turn up
+    /// there. A PR set further back than that window won't appear here
+    /// unless a recent run matched or beat it.
+    private func refreshPersonalRecords(from activities: [StravaActivity]) async {
+        let candidates = activities
+            .filter { SportCategory.matching($0) == .run }
+            .sorted { $0.startDateLocal > $1.startDateLocal }
+            .prefix(personalRecordLookbackCount)
+            .filter { !fetchedDetailActivityIDs.contains($0.id) }
+
+        guard !candidates.isEmpty else { return }
+
+        var newEfforts: [BestEffort] = []
+        for activity in candidates {
+            fetchedDetailActivityIDs.insert(activity.id)
+            guard let detail = try? await apiClient.fetchActivityDetail(id: activity.id) else { continue }
+            if let efforts = detail.bestEfforts {
+                newEfforts.append(contentsOf: efforts.filter { $0.prRank != nil })
+            }
+        }
+
+        guard !newEfforts.isEmpty else { return }
+        recentPersonalRecords = Self.mergeBestEfforts(existing: recentPersonalRecords, new: newEfforts)
+    }
+
+    /// Keeps one effort per distance name: whichever currently ranks
+    /// higher (rank 1 beats rank 2 beats rank 3), breaking ties by recency.
+    private static func mergeBestEfforts(existing: [BestEffort], new: [BestEffort]) -> [BestEffort] {
+        var bestByName: [String: BestEffort] = [:]
+        for effort in existing + new {
+            guard let current = bestByName[effort.name] else {
+                bestByName[effort.name] = effort
+                continue
+            }
+            let currentRank = current.prRank ?? Int.max
+            let newRank = effort.prRank ?? Int.max
+            if newRank < currentRank || (newRank == currentRank && effort.startDateLocal > current.startDateLocal) {
+                bestByName[effort.name] = effort
+            }
+        }
+        return bestByName.values.sorted { $0.distance < $1.distance }
     }
 
     private static func status(forRatio ratio: Double) -> TrainingStatus {
@@ -294,10 +390,24 @@ final class DashboardViewModel: ObservableObject {
         if !recentActivities.isEmpty {
             lines.append("Recent activities:")
             for activity in recentActivities.prefix(10) {
-                lines.append(
-                    "- \(activity.startDateLocal.formatted(date: .abbreviated, time: .omitted)): " +
-                    "\(activity.name) (\(activity.type), \(Units.formattedMiles(activity.distance)), \(activity.movingTime / 60) min)"
-                )
+                var line = "- \(activity.startDateLocal.formatted(date: .abbreviated, time: .omitted)): " +
+                    "\(activity.name) (\(activity.type), \(Units.formattedMiles(activity.distance)), \(activity.movingTime / 60) min"
+                if activity.deviceWatts == true, let watts = activity.weightedAverageWatts ?? activity.averageWatts {
+                    line += ", \(String(format: "%.0f", watts))w avg"
+                }
+                if let kilojoules = activity.kilojoules, kilojoules > 0 {
+                    line += ", \(String(format: "%.0f", kilojoules)) kJ"
+                }
+                line += ")"
+                lines.append(line)
+            }
+        }
+
+        if !recentPersonalRecords.isEmpty {
+            lines.append("Current top-3-all-time run efforts (from recent activities):")
+            for effort in recentPersonalRecords {
+                let rankLabel = ["1": "PR", "2": "#2 all-time", "3": "#3 all-time"][String(effort.prRank ?? 0)] ?? "top 3"
+                lines.append("- \(effort.name): \(Self.formattedDuration(effort.movingTime)) (\(rankLabel), set \(effort.startDateLocal.formatted(date: .abbreviated, time: .omitted)))")
             }
         }
 
@@ -305,13 +415,24 @@ final class DashboardViewModel: ObservableObject {
             guard let points = efficiencyTrend[category], let first = points.first, let last = points.last, first.efficiencyFactor > 0 else { continue }
             let percentChange = ((last.efficiencyFactor - first.efficiencyFactor) / first.efficiencyFactor) * 100
             let direction = percentChange >= 0 ? "up" : "down"
+            let basis = last.usedPower ? "power per heartbeat" : "speed per heartbeat"
             lines.append(
-                "\(category.rawValue) aerobic efficiency (speed per heartbeat) trending \(direction) " +
+                "\(category.rawValue) aerobic efficiency (\(basis)) trending \(direction) " +
                 "\(String(format: "%.0f", abs(percentChange)))% over the last \(points.count) months — a rough " +
                 "fitness/fatigue-resistance proxy from Strava's activity summaries, not adjusted for terrain or weather."
             )
         }
 
         return lines.joined(separator: "\n")
+    }
+
+    private static func formattedDuration(_ seconds: Int) -> String {
+        let hours = seconds / 3600
+        let minutes = (seconds % 3600) / 60
+        let remainingSeconds = seconds % 60
+        if hours > 0 {
+            return String(format: "%d:%02d:%02d", hours, minutes, remainingSeconds)
+        }
+        return String(format: "%d:%02d", minutes, remainingSeconds)
     }
 }

@@ -65,10 +65,14 @@ app short-lived tokens.
   CTL/ATL/form fitness-and-fatigue numbers alongside Apple Health in the
   Recovery section and the coach's context, and pushes scheduled workouts
   there as planned events, same as Google Calendar
-- Aerobic efficiency trend: a monthly "speed per heartbeat" trend per
-  sport, computed from Strava's own activity summaries, shown as a chart
-  on the Training tab and summarized for the coach — a rough proxy for
-  whether you're getting fitter without needing full power/HR streams
+- Aerobic efficiency trend: a monthly efficiency-factor trend per sport —
+  real power-per-heartbeat for rides with a power meter, speed-per-
+  heartbeat otherwise — computed from Strava's own activity summaries,
+  shown as a chart on the Training tab and summarized for the coach
+- Power data: average/weighted watts and kilojoules, shown on activities
+  that have them and factored into the efficiency trend above
+- Recent PRs: surfaces any run effort Strava currently ranks in your
+  all-time top 3 for its distance, among your most recently synced runs
 - Goals & preferences: an open free-text box (Coach tab, target-icon
   button) for anything the coach should know — races, equipment, recovery
   tools, blackout days, injuries — sent along with every chat message
@@ -76,6 +80,10 @@ app short-lived tokens.
   URL for your scheduled workouts, so Apple Calendar, Google Calendar, or
   any other app that supports URL calendar subscriptions can mirror your
   schedule read-only
+- Strava webhooks (optional, one-time backend setup — see
+  `backend/README.md`): the app checks a cheap status endpoint on
+  foreground and only does a full resync when something's actually
+  changed, instead of always re-fetching your whole activity list
 
 ## What's next
 

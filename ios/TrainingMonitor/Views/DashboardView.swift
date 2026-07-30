@@ -6,6 +6,7 @@ struct DashboardView: View {
     @ObservedObject private var calendarViewModel: GoogleCalendarViewModel
     @ObservedObject private var intervalsICUViewModel: IntervalsICUViewModel
     @EnvironmentObject private var authManager: StravaAuthManager
+    @Environment(\.scenePhase) private var scenePhase
     @State private var showIntervalsSettings = false
 
     init(viewModel: DashboardViewModel, healthViewModel: HealthViewModel, calendarViewModel: GoogleCalendarViewModel, intervalsICUViewModel: IntervalsICUViewModel) {
@@ -50,6 +51,12 @@ struct DashboardView: View {
                     if !viewModel.efficiencyTrend.isEmpty {
                         section(title: "Aerobic efficiency trend") {
                             EfficiencyTrendChart(trend: viewModel.efficiencyTrend)
+                        }
+                    }
+
+                    if !viewModel.recentPersonalRecords.isEmpty {
+                        section(title: "Recent PRs") {
+                            PersonalRecordsList(records: viewModel.recentPersonalRecords)
                         }
                     }
 
@@ -109,6 +116,10 @@ struct DashboardView: View {
             .task {
                 await viewModel.refresh()
                 await intervalsICUViewModel.refresh()
+            }
+            .onChange(of: scenePhase) { newPhase in
+                guard newPhase == .active, let athleteID = authManager.session?.athleteID else { return }
+                Task { await viewModel.refreshIfNewActivity(athleteID: athleteID) }
             }
             .overlay {
                 if viewModel.isLoading && viewModel.recentActivities.isEmpty {

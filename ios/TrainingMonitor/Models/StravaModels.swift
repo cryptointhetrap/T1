@@ -62,6 +62,16 @@ struct StravaActivity: Codable, Identifiable {
     let startDateLocal: Date
     let averageHeartrate: Double?
     let averageSpeed: Double? // meters/second
+    let averageWatts: Double?
+    /// Only present on rides, and only meaningful (per Strava's docs) when
+    /// `deviceWatts` is true — an estimated-power ride has no
+    /// weighted-average figure.
+    let weightedAverageWatts: Double?
+    /// True when `averageWatts`/`weightedAverageWatts` came from a real
+    /// power meter rather than Strava's speed-based estimate. Estimated
+    /// power isn't reliable enough to compute an efficiency factor from.
+    let deviceWatts: Bool?
+    let kilojoules: Double?
     /// Strava's "Relative Effort" score. Only present for some
     /// activities/athletes (requires heart rate data or a premium account).
     let sufferScore: Double?
@@ -74,6 +84,44 @@ struct StravaActivity: Codable, Identifiable {
         case startDateLocal = "start_date_local"
         case averageHeartrate = "average_heartrate"
         case averageSpeed = "average_speed"
+        case averageWatts = "average_watts"
+        case weightedAverageWatts = "weighted_average_watts"
+        case deviceWatts = "device_watts"
+        case kilojoules
         case sufferScore = "suffer_score"
+    }
+}
+
+/// The subset of Strava's `DetailedActivity` (fetched per-activity via
+/// `GET /activities/{id}`, unlike everything else in this file which comes
+/// from the cheaper activity-list summaries) that this app uses: the
+/// athlete's best-effort times for standard distances within that activity,
+/// each flagged with its current all-time rank when it's a top-3 effort.
+struct StravaActivityDetail: Codable {
+    let id: Int
+    let bestEfforts: [BestEffort]?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case bestEfforts = "best_efforts"
+    }
+}
+
+struct BestEffort: Codable, Identifiable {
+    let name: String // e.g. "5k", "10k", "Half-Marathon"
+    let distance: Double // meters
+    let movingTime: Int // seconds
+    let startDateLocal: Date
+    /// 1, 2, or 3 when this effort currently ranks in the athlete's
+    /// all-time top 3 for this distance; absent otherwise.
+    let prRank: Int?
+
+    var id: String { "\(name)-\(startDateLocal.timeIntervalSince1970)" }
+
+    enum CodingKeys: String, CodingKey {
+        case name, distance
+        case movingTime = "moving_time"
+        case startDateLocal = "start_date_local"
+        case prRank = "pr_rank"
     }
 }

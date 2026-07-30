@@ -19,12 +19,18 @@ are pushed there as real events, and Claude reads your upcoming events
 back so it can avoid double-booking you), and Intervals.icu (a self-serve
 API key, no OAuth — pulls in its own CTL/ATL/form fitness-and-fatigue
 numbers, and pushes scheduled workouts there too). The Training tab also
-shows a monthly aerobic-efficiency trend per sport (speed per heartbeat,
-from Strava's own summaries) once there's a few months of heart-rate
-data. The Coach tab has a free-text goals & preferences box (target-icon
-button) for anything you want the coach to factor in — races, equipment,
-recovery tools, blackout days, injuries. The Calendar tab can hand you a
-subscribable `.ics` feed URL (share-icon button) for any calendar app.
+shows: average/weighted watts and kilojoules on activities that have
+them; a monthly aerobic-efficiency trend per sport (real power-per-
+heartbeat for rides with a power meter, speed-per-heartbeat otherwise)
+once there's a few months of data; and a Recent PRs list of any run
+effort Strava currently ranks in your all-time top 3, found among your
+most recently synced runs. The Coach tab has a free-text goals &
+preferences box (target-icon button) for anything you want the coach to
+factor in — races, equipment, recovery tools, blackout days, injuries.
+The Calendar tab can hand you a subscribable `.ics` feed URL (share-icon
+button) for any calendar app. If you've set up the backend's optional
+Strava webhook subscription, the app also does a cheap foreground check
+and only does a full resync when something's actually new.
 
 The whole UI uses one small, deliberate palette: the Maryland state
 flag's gold, red, and black (`Views/Theme.swift`), in place of the
@@ -136,6 +142,16 @@ with the full URL can read that feed, so treat it like you would a Google
 Calendar "private address" link. This is also the one piece of state the
 otherwise-stateless backend holds; see `backend/README.md`.
 
+### Strava webhooks (optional)
+
+Purely a backend-side, one-time setup (see `backend/README.md` → *Strava
+webhook setup*) — nothing to configure in the app. Once it's done, the
+app's foreground check (`DashboardViewModel.refreshIfNewActivity`,
+triggered from `DashboardView`'s `scenePhase` change) starts finding real
+events instead of always getting `latestEventAt: null`. Skipping the
+backend setup is harmless; the app just falls back to its normal refresh
+triggers (pull-to-refresh, opening the Training tab).
+
 ## How auth works
 
 1. User taps **Connect with Strava** → app opens Strava's OAuth screen via
@@ -156,9 +172,9 @@ TrainingMonitor/
   Config/         Client ID / backend URL constants
   Models/         Codable Strava/Google API models, unit conversions
   Services/       Keychain, Strava + Google + Intervals.icu clients,
-                  backend client, coach chat client, local
-                  scheduled-workout store + calendar feed uploads,
-                  HealthKit manager, free-text preferences store
+                  backend client, webhook status polling, coach chat
+                  client, local scheduled-workout store + calendar feed
+                  uploads, HealthKit manager, free-text preferences store
   ViewModels/      Training-load + efficiency aggregation, calendar month
                   pagination, coach chat, Health, Google Calendar,
                   Intervals.icu

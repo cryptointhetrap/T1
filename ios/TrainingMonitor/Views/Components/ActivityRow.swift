@@ -8,12 +8,20 @@ struct ActivityRow: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(activity.name)
                     .font(.subheadline.bold())
-                Text("\(activity.type) · \(Units.formattedMiles(activity.distance)) · \(activity.movingTime / 60) min")
+                Text(subtitle)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
             Spacer()
         }
         .padding(.vertical, 8)
+    }
+
+    private var subtitle: String {
+        var parts = ["\(activity.type)", Units.formattedMiles(activity.distance), "\(activity.movingTime / 60) min"]
+        if activity.deviceWatts == true, let watts = activity.weightedAverageWatts ?? activity.averageWatts {
+            parts.append("\(String(format: "%.0f", watts))w")
+        }
+        return parts.joined(separator: " · ")
     }
 }

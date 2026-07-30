@@ -26,6 +26,17 @@ and the **Anthropic API key** out of the iOS app.
   Calendar "private address" link. Data is written to
   `FEED_DATA_DIR` (defaults to `./data/feeds`) as one small JSON file per
   token; delete a file to wipe that feed.
+- `GET /webhooks/strava` / `POST /webhooks/strava` / `GET
+  /webhooks/strava/status/:athleteID` — Strava webhook plumbing. The first
+  two are Strava calling *this backend*: a one-time subscription-
+  verification handshake, and then a ping every time an activity is
+  created/updated/deleted for any athlete who's authorized the app. The
+  backend just remembers the latest event time per athlete
+  (`WEBHOOK_DATA_DIR`, defaults to `./data/webhooks`) — it has no way to
+  push straight to a specific phone (no APNs, no device-token registry),
+  so instead the app polls the third, cheap route on foreground and only
+  does a full Strava resync if there's actually something new. See
+  *Strava webhook setup* below.
 
 Everything else (Strava activities/stats, Apple Health, Google Calendar,
 Intervals.icu) is called by the iOS app **directly against those APIs** —
@@ -68,11 +79,13 @@ Set `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET`, `ANTHROPIC_API_KEY`, and
 app's `backendBaseURL` (in `ios/TrainingMonitor/Config/AppConfig.swift`) at
 the deployed URL.
 
-If you want the `.ics` calendar feed to survive redeploys, mount a
-persistent volume and point `FEED_DATA_DIR` at it — otherwise it's just a
-few small JSON files on local disk and gets wiped on a platform that uses
-ephemeral filesystems (fine for personal use; you'd just need to
-reconnect/re-save a workout in the app to repopulate it).
+If you want the `.ics` calendar feed or webhook event cache to survive
+redeploys, mount a persistent volume and point `FEED_DATA_DIR` /
+`WEBHOOK_DATA_DIR` at it — otherwise they're just small JSON files on
+local disk and get wiped on a platform that uses ephemeral filesystems
+(fine for personal use; the feed repopulates next time the app saves a
+workout, and webhook status just goes back to "unknown" until the next
+event arrives).
 
 ## Strava app configuration
 
@@ -83,3 +96,35 @@ custom URL scheme (`trainingmonitor://oauth-callback`) for the redirect, so
 this backend never needs to be publicly reachable during the OAuth
 handshake itself — only for the `/auth/exchange` and `/auth/refresh` calls
 that follow it.
+
+## Strava webhook setup
+
+Unlike everything else here, this is a one-time, app-level step you run
+once against your deployed backend (not something the iOS app does):
+
+1. Deploy the backend somewhere publicly reachable and set
+   `STRAVA_WEBHOOK_VERIFY_TOKEN` to a random string of your choosing.
+2. Create the push subscription — Strava will immediately call back to
+   `GET /webhooks/strava` to verify it, so the backend must already be
+   deployed and reachable when you run this:
+
+   ```bash
+   curl -X POST https://www.strava.com/api/v3/push_subscriptions \
+     -F client_id=YOUR_STRAVA_CLIENT_ID \
+     -F client_secret=YOUR_STRAVA_CLIENT_SECRET \
+     -F callback_url=https://your-deployed-backend/webhooks/strava \
+     -F verify_token=YOUR_STRAVA_WEBHOOK_VERIFY_TOKEN
+   ```
+3. A successful response includes an `id` — that's your subscription. You
+   only do this once per Strava API application; it then applies to every
+   athlete who authorizes the app, automatically. Check it any time with:
+
+   ```bash
+   curl -G https://www.strava.com/api/v3/push_subscriptions \
+     -d client_id=YOUR_STRAVA_CLIENT_ID \
+     -d client_secret=YOUR_STRAVA_CLIENT_SECRET
+   ```
+
+Skipping this step doesn't break anything — the app just won't get the
+foreground fast-path and falls back to its normal refresh cadence
+(pull-to-refresh, tab appearance).
