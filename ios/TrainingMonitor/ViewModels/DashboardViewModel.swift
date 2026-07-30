@@ -4,9 +4,9 @@ import Foundation
 struct WeekSummary: Identifiable {
     let id: Date // week start
     let weekStart: Date
-    let distanceKm: Double
+    let distanceMeters: Double
     let movingTimeHours: Double
-    let elevationGainM: Double
+    let elevationGainMeters: Double
     let activityCount: Int
 }
 
@@ -24,6 +24,37 @@ enum TrainingStatus: String {
     case detraining = "Detraining"
 }
 
+enum SportCategory: String, CaseIterable, Identifiable {
+    case run = "Run"
+    case ride = "Bike"
+    var id: String { rawValue }
+
+    var systemImage: String {
+        switch self {
+        case .run: return "figure.run"
+        case .ride: return "figure.outdoor.cycle"
+        }
+    }
+
+    fileprivate static func matching(_ activity: StravaActivity) -> SportCategory? {
+        if activity.type.contains("Run") { return .run }
+        if activity.type.contains("Ride") { return .ride }
+        return nil
+    }
+}
+
+struct PeriodTotals {
+    let distanceMeters: Double
+    let elevationGainMeters: Double
+    let activityCount: Int
+}
+
+struct SportTotals {
+    let weekly: PeriodTotals
+    let monthly: PeriodTotals
+    let yearly: PeriodTotals
+}
+
 @MainActor
 final class DashboardViewModel: ObservableObject {
     @Published private(set) var weeklySummaries: [WeekSummary] = []
@@ -31,11 +62,16 @@ final class DashboardViewModel: ObservableObject {
     @Published private(set) var recentActivities: [StravaActivity] = []
     @Published private(set) var acuteChronicRatio: Double?
     @Published private(set) var trainingStatus: TrainingStatus?
+    @Published private(set) var sportTotals: [SportCategory: SportTotals] = [:]
     @Published private(set) var isLoading = false
     @Published var errorMessage: String?
 
     private let apiClient: StravaAPIClient
-    private let lookbackDays = 90
+    /// Just over a year so calendar year-to-date totals are always complete,
+    /// even in early January when "this year" only spans a few days.
+    private let lookbackDays = 370
+    /// The acute:chronic load trend only needs the trailing 90 days.
+    private let loadTrendDays = 90
 
     init(apiClient: StravaAPIClient) {
         self.apiClient = apiClient
@@ -51,7 +87,8 @@ final class DashboardViewModel: ObservableObject {
             let activities = try await apiClient.fetchActivities(after: since)
             recentActivities = activities.sorted { $0.startDateLocal > $1.startDateLocal }
             weeklySummaries = Self.buildWeeklySummaries(from: activities)
-            let series = Self.buildLoadSeries(from: activities, days: lookbackDays)
+            sportTotals = Self.buildSportTotals(from: activities)
+            let series = Self.buildLoadSeries(from: activities, days: loadTrendDays)
             loadSeries = series
             if let latest = series.last, latest.chronicLoad > 0 {
                 acuteChronicRatio = latest.acuteLoad / latest.chronicLoad
@@ -72,13 +109,44 @@ final class DashboardViewModel: ObservableObject {
             WeekSummary(
                 id: weekStart,
                 weekStart: weekStart,
-                distanceKm: activities.reduce(0) { $0 + $1.distance } / 1000,
+                distanceMeters: activities.reduce(0) { $0 + $1.distance },
                 movingTimeHours: Double(activities.reduce(0) { $0 + $1.movingTime }) / 3600,
-                elevationGainM: activities.reduce(0) { $0 + $1.totalElevationGain },
+                elevationGainMeters: activities.reduce(0) { $0 + $1.totalElevationGain },
                 activityCount: activities.count
             )
         }
         .sorted { $0.weekStart < $1.weekStart }
+    }
+
+    /// Totals per sport (run/bike) for the current calendar week, month, and
+    /// year, so the Bike & Run section always reads "this week / this month
+    /// / this year" rather than a rolling window.
+    private static func buildSportTotals(from activities: [StravaActivity]) -> [SportCategory: SportTotals] {
+        let calendar = Calendar.current
+        let now = Date()
+        let weekStart = calendar.dateInterval(of: .weekOfYear, for: now)?.start ?? now
+        let monthStart = calendar.dateInterval(of: .month, for: now)?.start ?? now
+        let yearStart = calendar.date(from: calendar.dateComponents([.year], from: now)) ?? now
+
+        var result: [SportCategory: SportTotals] = [:]
+        for category in SportCategory.allCases {
+            let matched = activities.filter { SportCategory.matching($0) == category }
+            result[category] = SportTotals(
+                weekly: totals(for: matched, since: weekStart),
+                monthly: totals(for: matched, since: monthStart),
+                yearly: totals(for: matched, since: yearStart)
+            )
+        }
+        return result
+    }
+
+    private static func totals(for activities: [StravaActivity], since: Date) -> PeriodTotals {
+        let matched = activities.filter { $0.startDateLocal >= since }
+        return PeriodTotals(
+            distanceMeters: matched.reduce(0) { $0 + $1.distance },
+            elevationGainMeters: matched.reduce(0) { $0 + $1.totalElevationGain },
+            activityCount: matched.count
+        )
     }
 
     /// Uses each activity's Strava "suffer score" (Relative Effort) when

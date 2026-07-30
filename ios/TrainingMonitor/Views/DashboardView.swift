@@ -18,6 +18,16 @@ struct DashboardView: View {
 
                     statGrid
 
+                    section(title: "Bike & Run") {
+                        VStack(spacing: 12) {
+                            ForEach(SportCategory.allCases) { category in
+                                if let totals = viewModel.sportTotals[category] {
+                                    SportSummaryCard(category: category, totals: totals)
+                                }
+                            }
+                        }
+                    }
+
                     section(title: "Weekly volume") {
                         WeeklyVolumeChart(weeks: viewModel.weeklySummaries)
                     }
@@ -70,7 +80,7 @@ struct DashboardView: View {
         return LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
             StatCard(
                 title: "This week",
-                value: String(format: "%.1f km", last7?.distanceKm ?? 0),
+                value: Units.formattedMiles(last7?.distanceMeters ?? 0),
                 systemImage: "figure.run"
             )
             StatCard(
@@ -80,7 +90,7 @@ struct DashboardView: View {
             )
             StatCard(
                 title: "Elevation",
-                value: String(format: "%.0f m", last7?.elevationGainM ?? 0),
+                value: Units.formattedFeet(last7?.elevationGainMeters ?? 0),
                 systemImage: "mountain.2"
             )
             StatCard(
@@ -133,7 +143,7 @@ private struct ActivityRow: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(activity.name)
                     .font(.subheadline.bold())
-                Text("\(activity.type) · \(String(format: "%.1f km", activity.distance / 1000)) · \(activity.movingTime / 60) min")
+                Text("\(activity.type) · \(Units.formattedMiles(activity.distance)) · \(activity.movingTime / 60) min")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

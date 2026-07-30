@@ -1,8 +1,10 @@
 # TrainingMonitor (iOS)
 
 A SwiftUI app that connects to Strava and shows a training load / trends
-dashboard: weekly volume (distance/time/elevation), a 7-day vs 28-day
-acute:chronic load trend, and a recent activities list.
+dashboard: weekly volume (distance/time/elevation), a Bike & Run section
+with weekly/monthly/yearly mileage and elevation gain per sport, a 7-day
+vs 28-day acute:chronic load trend, and a recent activities list. Distances
+are shown in miles, elevation gain in feet.
 
 This project was scaffolded without Xcode (built in a Linux container), so
 it uses [XcodeGen](https://github.com/yonaskolb/XcodeGen) to generate the

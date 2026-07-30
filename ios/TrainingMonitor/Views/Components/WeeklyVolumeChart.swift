@@ -8,7 +8,7 @@ struct WeeklyVolumeChart: View {
         Chart(weeks) { week in
             BarMark(
                 x: .value("Week", week.weekStart, unit: .weekOfYear),
-                y: .value("Distance (km)", week.distanceKm)
+                y: .value("Distance (mi)", Units.miles(fromMeters: week.distanceMeters))
             )
             .foregroundStyle(Color.accentColor)
             .cornerRadius(4)

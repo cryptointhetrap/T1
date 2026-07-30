@@ -33,6 +33,8 @@ app short-lived tokens.
 - Connect/disconnect your Strava account (OAuth via
   `ASWebAuthenticationSession`, tokens kept in the iOS Keychain)
 - Weekly training volume chart (distance/time/elevation)
+- Bike & Run section: weekly, monthly, and yearly mileage and elevation
+  gain, broken out per sport (miles/feet)
 - Training load trend: 7-day (acute) vs 28-day (chronic) rolling load, with
   a simple status readout (ramping up / optimal / high load / detraining)
 - Recent activities list
@@ -42,7 +44,7 @@ app short-lived tokens.
 This is intentionally a thin first slice. Natural next additions, roughly
 in order of how self-contained they are:
 
-- Per-sport breakdown (run vs ride vs swim) instead of everything combined
+- Swim/other sports in the per-sport breakdown
 - Weekly goal setting + progress rings
 - Push notifications (e.g. a weekly recap, or an overload warning)
 - HealthKit integration for recovery signals (resting HR, HRV, sleep)
