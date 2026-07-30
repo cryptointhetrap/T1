@@ -1,12 +1,14 @@
 # TrainingMonitor backend
 
-A minimal Express service whose only job is to keep the Strava **client
-secret** out of the iOS app. It does two things:
+A minimal Express service with two jobs: keep the Strava **client secret**
+and the **Anthropic API key** out of the iOS app.
 
 - `POST /auth/exchange` — exchanges an OAuth `code` (from the in-app Strava
   login) for an `access_token` / `refresh_token` pair.
 - `POST /auth/refresh` — exchanges a stored `refresh_token` for a fresh
   `access_token` once the old one expires.
+- `POST /chat/coach` — forwards a chat conversation plus a training-data
+  summary to Claude and returns its reply.
 
 Everything else (activities, athlete stats, etc.) is called by the iOS app
 **directly against the Strava API** using the `access_token` returned here —
@@ -20,7 +22,8 @@ cd backend
 npm install
 cp .env.example .env
 # fill in STRAVA_CLIENT_ID / STRAVA_CLIENT_SECRET from
-# https://www.strava.com/settings/api
+# https://www.strava.com/settings/api, and ANTHROPIC_API_KEY from
+# https://console.anthropic.com
 npm run dev
 ```
 
@@ -35,9 +38,10 @@ npm run build
 npm start
 ```
 
-Set `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET`, and `PORT` as environment
-variables on the host. Once deployed, point the iOS app's `backendBaseURL`
-(in `ios/TrainingMonitor/Config/AppConfig.swift`) at the deployed URL.
+Set `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET`, `ANTHROPIC_API_KEY`, and
+`PORT` as environment variables on the host. Once deployed, point the iOS
+app's `backendBaseURL` (in `ios/TrainingMonitor/Config/AppConfig.swift`) at
+the deployed URL.
 
 ## Strava app configuration
 

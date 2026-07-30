@@ -6,8 +6,10 @@ training load / trends dashboard. Built as two pieces:
 - **`ios/`** — the SwiftUI app (native, App Store target).
 - **`backend/`** — a minimal Node/Express service that performs the Strava
   OAuth token exchange/refresh, so the Strava **client secret** never has to
-  live inside the mobile app. It does not store or proxy your activity
-  data — the app talks to Strava directly for everything else.
+  live inside the mobile app. It also proxies chat messages to Claude
+  (Anthropic API) for the in-app coach, so the **Anthropic API key** stays
+  server-side too. It does not store or proxy your activity data — the app
+  talks to Strava directly for everything else.
 
 ## Why a backend at all?
 
@@ -20,10 +22,11 @@ app short-lived tokens.
 
 1. **Register a Strava API app**: https://www.strava.com/settings/api
    (gives you a Client ID and Client Secret).
-2. **Run the backend** — see `backend/README.md`. For local development
+2. **Get an Anthropic API key** (for the Coach chat tab): https://console.anthropic.com
+3. **Run the backend** — see `backend/README.md`. For local development
    against the iOS Simulator, `http://localhost:8787` (the default) works
    out of the box.
-3. **Build the iOS app** — see `ios/README.md`. Requires a Mac with Xcode
+4. **Build the iOS app** — see `ios/README.md`. Requires a Mac with Xcode
    and [XcodeGen](https://github.com/yonaskolb/XcodeGen) (this repo doesn't
    include a hand-built `.xcodeproj`; `xcodegen generate` produces one from
    `ios/project.yml`).
@@ -41,6 +44,9 @@ app short-lived tokens.
 - Activity calendar: scrolls back through your entire history month by
   month (no fixed cutoff), with a colored dot per sport on days you were
   active; tap a day to see what you did
+- Coach chat: ask Claude about your workouts and training trends — it's
+  grounded in the same weekly/monthly/yearly stats and recent activities
+  shown in the Training tab
 
 ## What's next
 

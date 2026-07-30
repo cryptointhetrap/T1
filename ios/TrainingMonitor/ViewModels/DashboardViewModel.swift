@@ -207,4 +207,44 @@ final class DashboardViewModel: ObservableObject {
         default: return .highRisk
         }
     }
+
+    /// A compact plain-text summary of the athlete's currently-loaded stats,
+    /// sent to the coach chat backend as grounding context so Claude answers
+    /// from the athlete's actual data rather than guessing.
+    func trainingSummaryText() -> String {
+        var lines: [String] = []
+
+        if let status = trainingStatus, let ratio = acuteChronicRatio {
+            lines.append("Training status: \(status.rawValue) (acute:chronic ratio \(String(format: "%.2f", ratio)))")
+        }
+
+        if let week = weeklySummaries.last {
+            lines.append(
+                "This week overall: \(Units.formattedMiles(week.distanceMeters)), " +
+                "\(String(format: "%.1f", week.movingTimeHours)) h, " +
+                "\(Units.formattedFeet(week.elevationGainMeters)) gain, \(week.activityCount) activities"
+            )
+        }
+
+        for category in SportCategory.allCases {
+            guard let totals = sportTotals[category] else { continue }
+            lines.append(
+                "\(category.rawValue) — week: \(Units.formattedMiles(totals.weekly.distanceMeters)); " +
+                "month: \(Units.formattedMiles(totals.monthly.distanceMeters)); " +
+                "year: \(Units.formattedMiles(totals.yearly.distanceMeters)), \(Units.formattedFeet(totals.yearly.elevationGainMeters)) gain"
+            )
+        }
+
+        if !recentActivities.isEmpty {
+            lines.append("Recent activities:")
+            for activity in recentActivities.prefix(10) {
+                lines.append(
+                    "- \(activity.startDateLocal.formatted(date: .abbreviated, time: .omitted)): " +
+                    "\(activity.name) (\(activity.type), \(Units.formattedMiles(activity.distance)), \(activity.movingTime / 60) min)"
+                )
+            }
+        }
+
+        return lines.joined(separator: "\n")
+    }
 }
