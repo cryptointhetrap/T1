@@ -74,7 +74,9 @@ private struct DayCell: View {
         VStack(spacing: 3) {
             Text(day, format: .dateTime.day())
                 .font(.caption)
-                .foregroundStyle(isToday ? .white : .primary)
+                // Black, not white — the gold accent circle is bright enough
+                // that white text on it fails contrast.
+                .foregroundStyle(isToday ? .black : .primary)
                 .frame(width: 24, height: 24)
                 .background(isToday ? Color.accentColor : Color.clear, in: Circle())
 

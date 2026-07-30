@@ -165,7 +165,7 @@ struct DashboardView: View {
             Spacer()
         }
         .padding()
-        .background(color(for: status).opacity(0.15), in: RoundedRectangle(cornerRadius: 14))
+        .background(color(for: status).opacity(0.22), in: RoundedRectangle(cornerRadius: 14))
     }
 
     private func color(for status: TrainingStatus) -> Color {

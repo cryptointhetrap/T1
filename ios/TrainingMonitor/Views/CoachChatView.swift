@@ -84,10 +84,13 @@ private struct ChatBubble: View {
             Text(message.content)
                 .padding(10)
                 .background(
-                    message.role == .user ? Color.accentColor.opacity(0.9) : Color.secondary.opacity(0.15),
+                    message.role == .user ? Color.accentColor : Color.secondary.opacity(0.22),
                     in: RoundedRectangle(cornerRadius: 14)
                 )
-                .foregroundStyle(message.role == .user ? .white : .primary)
+                // Black text on the gold user bubble, not white — gold is bright
+                // enough that white fails contrast. The assistant bubble is a
+                // dark gray fill, so it needs the opposite: light text.
+                .foregroundStyle(message.role == .user ? .black : .primary)
 
             if message.role == .assistant { Spacer(minLength: 40) }
         }

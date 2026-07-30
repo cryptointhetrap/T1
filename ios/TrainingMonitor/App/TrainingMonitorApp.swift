@@ -8,6 +8,7 @@ struct TrainingMonitorApp: App {
         WindowGroup {
             RootView()
                 .environmentObject(authManager)
+                .preferredColorScheme(.dark)
         }
     }
 }

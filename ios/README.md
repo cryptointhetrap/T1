@@ -24,6 +24,14 @@ assorted orange/blue/purple/green/yellow this app used earlier. Strava's
 own "Connect with Strava" button keeps Strava's brand orange per their
 usage guidelines — that one's intentionally not part of the theme.
 
+The app is forced to a black, dark-appearance theme
+(`.preferredColorScheme(.dark)` in `TrainingMonitorApp`) regardless of the
+device's system setting. The red was swapped for Apple's own dark-mode
+system red (`#FF453A`) — the flag's `#E03C31` reads muddier on true
+black — and a couple of low-opacity fills (the training-status banner,
+the assistant chat bubble) were raised so they stay visible against
+black instead of nearly disappearing into it.
+
 This project was scaffolded without Xcode (built in a Linux container), so
 it uses [XcodeGen](https://github.com/yonaskolb/XcodeGen) to generate the
 `.xcodeproj` deterministically from `project.yml` rather than shipping a
