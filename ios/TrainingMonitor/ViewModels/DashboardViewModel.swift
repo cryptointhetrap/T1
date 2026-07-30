@@ -53,6 +53,10 @@ struct SportTotals {
     let weekly: PeriodTotals
     let monthly: PeriodTotals
     let yearly: PeriodTotals
+    /// Year-to-date totals divided by weeks elapsed so far this year — a
+    /// rolling per-week average that rises/falls as the year progresses,
+    /// rather than a fixed weekly snapshot.
+    let weeklyAverageForYear: PeriodTotals
 }
 
 @MainActor
@@ -128,13 +132,22 @@ final class DashboardViewModel: ObservableObject {
         let monthStart = calendar.dateInterval(of: .month, for: now)?.start ?? now
         let yearStart = calendar.date(from: calendar.dateComponents([.year], from: now)) ?? now
 
+        let daysElapsedInYear = calendar.dateComponents([.day], from: yearStart, to: now).day ?? 0
+        let weeksElapsedInYear = max(Double(daysElapsedInYear + 1) / 7, 1)
+
         var result: [SportCategory: SportTotals] = [:]
         for category in SportCategory.allCases {
             let matched = activities.filter { SportCategory.matching($0) == category }
+            let yearly = totals(for: matched, since: yearStart)
             result[category] = SportTotals(
                 weekly: totals(for: matched, since: weekStart),
                 monthly: totals(for: matched, since: monthStart),
-                yearly: totals(for: matched, since: yearStart)
+                yearly: yearly,
+                weeklyAverageForYear: PeriodTotals(
+                    distanceMeters: yearly.distanceMeters / weeksElapsedInYear,
+                    elevationGainMeters: yearly.elevationGainMeters / weeksElapsedInYear,
+                    activityCount: Int((Double(yearly.activityCount) / weeksElapsedInYear).rounded())
+                )
             )
         }
         return result

@@ -16,6 +16,8 @@ struct SportSummaryCard: View {
             row(label: "This month", totals: totals.monthly)
             Divider()
             row(label: "This year", totals: totals.yearly)
+            Divider()
+            row(label: "Avg/week (year)", totals: totals.weeklyAverageForYear)
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
