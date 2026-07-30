@@ -6,6 +6,7 @@ import Security
 enum KeychainStore {
     private static let stravaAccount = "strava-session"
     private static let googleAccount = "google-session"
+    private static let intervalsAccount = "intervals-icu-credentials"
     private static let service = "com.trainingmonitor.app.oauth-sessions"
 
     static func save(_ session: StravaSession) {
@@ -30,6 +31,18 @@ enum KeychainStore {
 
     static func clearGoogleSession() {
         clear(account: googleAccount)
+    }
+
+    static func saveIntervalsCredentials(_ credentials: IntervalsICUCredentials) {
+        save(credentials, account: intervalsAccount)
+    }
+
+    static func loadIntervalsCredentials() -> IntervalsICUCredentials? {
+        load(account: intervalsAccount)
+    }
+
+    static func clearIntervalsCredentials() {
+        clear(account: intervalsAccount)
     }
 
     private static func save<T: Encodable>(_ session: T, account: String) {

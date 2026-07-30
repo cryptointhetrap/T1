@@ -61,6 +61,7 @@ struct StravaActivity: Codable, Identifiable {
     let totalElevationGain: Double // meters
     let startDateLocal: Date
     let averageHeartrate: Double?
+    let averageSpeed: Double? // meters/second
     /// Strava's "Relative Effort" score. Only present for some
     /// activities/athletes (requires heart rate data or a premium account).
     let sufferScore: Double?
@@ -72,6 +73,7 @@ struct StravaActivity: Codable, Identifiable {
         case totalElevationGain = "total_elevation_gain"
         case startDateLocal = "start_date_local"
         case averageHeartrate = "average_heartrate"
+        case averageSpeed = "average_speed"
         case sufferScore = "suffer_score"
     }
 }

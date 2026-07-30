@@ -12,11 +12,19 @@ Claude can also schedule, move, or cancel future workouts there, which
 show up as hollow calendar markers alongside completed activities.
 Distances are shown in miles, elevation gain in feet.
 
-Two more connections, both optional, from the Training tab's `•••` menu:
+Three more connections, all optional, from the Training tab's `•••` menu:
 Apple Health (sleep, resting heart rate, HRV, shown in a Recovery section
-and fed into the coach's context) and Google Calendar (scheduled workouts
+and fed into the coach's context), Google Calendar (scheduled workouts
 are pushed there as real events, and Claude reads your upcoming events
-back so it can avoid double-booking you).
+back so it can avoid double-booking you), and Intervals.icu (a self-serve
+API key, no OAuth — pulls in its own CTL/ATL/form fitness-and-fatigue
+numbers, and pushes scheduled workouts there too). The Training tab also
+shows a monthly aerobic-efficiency trend per sport (speed per heartbeat,
+from Strava's own summaries) once there's a few months of heart-rate
+data. The Coach tab has a free-text goals & preferences box (target-icon
+button) for anything you want the coach to factor in — races, equipment,
+recovery tools, blackout days, injuries. The Calendar tab can hand you a
+subscribable `.ics` feed URL (share-icon button) for any calendar app.
 
 The whole UI uses one small, deliberate palette: the Maryland state
 flag's gold, red, and black (`Views/Theme.swift`), in place of the
@@ -105,6 +113,29 @@ No account or console setup — HealthKit permission is a plain system
 dialog. Testing sleep data specifically works best on a real device (the
 Simulator's Health app has no real sleep history to read).
 
+### Intervals.icu
+
+No console setup either — generate a personal API key at
+[intervals.icu → Settings → Developer](https://intervals.icu/settings)
+(also shown there: your athlete ID, which looks like `i123456`). Enter
+both in the app's Intervals.icu connect sheet. Field names for the
+wellness response (`ctl`, `atl`, `restingHR`, `hrv`, etc.) come from
+intervals.icu's community-documented API rather than a published formal
+schema — if a field silently reads as missing, it likely means
+intervals.icu renamed or moved it and `IntervalsWellness` in
+`Models/IntervalsICUModels.swift` needs a small update.
+
+### Calendar feed (`.ics`)
+
+The Calendar tab's share-icon button shows a subscription URL
+(`<backendBaseURL>/feed/<token>.ics`) you can add to Apple Calendar,
+Google Calendar, or anything else that supports URL-based calendar
+subscriptions. The token is a random, unguessable per-install value
+generated on first use (`Services/CalendarFeedClient.swift`) — anyone
+with the full URL can read that feed, so treat it like you would a Google
+Calendar "private address" link. This is also the one piece of state the
+otherwise-stateless backend holds; see `backend/README.md`.
+
 ## How auth works
 
 1. User taps **Connect with Strava** → app opens Strava's OAuth screen via
@@ -124,12 +155,13 @@ TrainingMonitor/
   App/            App entry point (@main)
   Config/         Client ID / backend URL constants
   Models/         Codable Strava/Google API models, unit conversions
-  Services/       Keychain, Strava + Google OAuth, backend client,
-                  Strava/Google Calendar API clients, coach chat client,
-                  local scheduled-workout store, HealthKit manager
-  ViewModels/      Training-load aggregation (weekly + acute:chronic),
-                  calendar month pagination, coach chat, Health, Google
-                  Calendar
+  Services/       Keychain, Strava + Google + Intervals.icu clients,
+                  backend client, coach chat client, local
+                  scheduled-workout store + calendar feed uploads,
+                  HealthKit manager, free-text preferences store
+  ViewModels/      Training-load + efficiency aggregation, calendar month
+                  pagination, coach chat, Health, Google Calendar,
+                  Intervals.icu
   Views/          SwiftUI screens and chart components
 ```
 

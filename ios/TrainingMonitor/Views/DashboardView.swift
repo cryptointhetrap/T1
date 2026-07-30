@@ -4,12 +4,15 @@ struct DashboardView: View {
     @StateObject private var viewModel: DashboardViewModel
     @ObservedObject private var healthViewModel: HealthViewModel
     @ObservedObject private var calendarViewModel: GoogleCalendarViewModel
+    @ObservedObject private var intervalsICUViewModel: IntervalsICUViewModel
     @EnvironmentObject private var authManager: StravaAuthManager
+    @State private var showIntervalsSettings = false
 
-    init(viewModel: DashboardViewModel, healthViewModel: HealthViewModel, calendarViewModel: GoogleCalendarViewModel) {
+    init(viewModel: DashboardViewModel, healthViewModel: HealthViewModel, calendarViewModel: GoogleCalendarViewModel, intervalsICUViewModel: IntervalsICUViewModel) {
         _viewModel = StateObject(wrappedValue: viewModel)
         self.healthViewModel = healthViewModel
         self.calendarViewModel = calendarViewModel
+        self.intervalsICUViewModel = intervalsICUViewModel
     }
 
     var body: some View {
@@ -44,6 +47,12 @@ struct DashboardView: View {
                         TrainingLoadChart(points: viewModel.loadSeries)
                     }
 
+                    if !viewModel.efficiencyTrend.isEmpty {
+                        section(title: "Aerobic efficiency trend") {
+                            EfficiencyTrendChart(trend: viewModel.efficiencyTrend)
+                        }
+                    }
+
                     section(title: "Recent activities") {
                         VStack(spacing: 0) {
                             ForEach(viewModel.recentActivities.prefix(10)) { activity in
@@ -73,6 +82,15 @@ struct DashboardView: View {
                                 calendarViewModel.connect()
                             }
                         }
+                        if intervalsICUViewModel.isConnected {
+                            Button("Disconnect Intervals.icu", role: .destructive) {
+                                intervalsICUViewModel.disconnect()
+                            }
+                        } else {
+                            Button("Connect Intervals.icu") {
+                                showIntervalsSettings = true
+                            }
+                        }
                         Button("Disconnect Strava", role: .destructive) {
                             authManager.disconnect()
                         }
@@ -81,8 +99,17 @@ struct DashboardView: View {
                     }
                 }
             }
-            .refreshable { await viewModel.refresh() }
-            .task { await viewModel.refresh() }
+            .sheet(isPresented: $showIntervalsSettings) {
+                IntervalsICUSettingsView(viewModel: intervalsICUViewModel)
+            }
+            .refreshable {
+                await viewModel.refresh()
+                await intervalsICUViewModel.refresh()
+            }
+            .task {
+                await viewModel.refresh()
+                await intervalsICUViewModel.refresh()
+            }
             .overlay {
                 if viewModel.isLoading && viewModel.recentActivities.isEmpty {
                     ProgressView()
@@ -125,31 +152,48 @@ struct DashboardView: View {
 
     @ViewBuilder
     private var recoverySection: some View {
-        if healthViewModel.isAuthorized {
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                StatCard(
-                    title: "Sleep",
-                    value: healthViewModel.sleepHours.map { String(format: "%.1f h", $0) } ?? "—",
-                    systemImage: "bed.double"
-                )
-                StatCard(
-                    title: "Resting HR",
-                    value: healthViewModel.restingHeartRate.map { String(format: "%.0f bpm", $0) } ?? "—",
-                    systemImage: "heart"
-                )
-                StatCard(
-                    title: "HRV",
-                    value: healthViewModel.heartRateVariability.map { String(format: "%.0f ms", $0) } ?? "—",
-                    systemImage: "waveform.path.ecg"
-                )
+        VStack(alignment: .leading, spacing: 12) {
+            if healthViewModel.isAuthorized {
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                    StatCard(
+                        title: "Sleep",
+                        value: healthViewModel.sleepHours.map { String(format: "%.1f h", $0) } ?? "—",
+                        systemImage: "bed.double"
+                    )
+                    StatCard(
+                        title: "Resting HR",
+                        value: healthViewModel.restingHeartRate.map { String(format: "%.0f bpm", $0) } ?? "—",
+                        systemImage: "heart"
+                    )
+                    StatCard(
+                        title: "HRV",
+                        value: healthViewModel.heartRateVariability.map { String(format: "%.0f ms", $0) } ?? "—",
+                        systemImage: "waveform.path.ecg"
+                    )
+                }
+            } else {
+                Button {
+                    Task { await healthViewModel.requestAccess() }
+                } label: {
+                    Label("Connect Apple Health", systemImage: "heart.text.square")
+                }
+                .buttonStyle(.bordered)
             }
-        } else {
-            Button {
-                Task { await healthViewModel.requestAccess() }
-            } label: {
-                Label("Connect Apple Health", systemImage: "heart.text.square")
+
+            if let wellness = intervalsICUViewModel.latestWellness, let ctl = wellness.ctl, let atl = wellness.atl {
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                    StatCard(title: "Fitness (CTL)", value: String(format: "%.0f", ctl), systemImage: "chart.line.uptrend.xyaxis")
+                    StatCard(title: "Fatigue (ATL)", value: String(format: "%.0f", atl), systemImage: "battery.25")
+                    StatCard(title: "Form", value: String(format: "%.0f", ctl - atl), systemImage: "figure.run.circle")
+                }
+            } else if !intervalsICUViewModel.isConnected {
+                Button {
+                    showIntervalsSettings = true
+                } label: {
+                    Label("Connect Intervals.icu", systemImage: "waveform.path.ecg.rectangle")
+                }
+                .buttonStyle(.bordered)
             }
-            .buttonStyle(.bordered)
         }
     }
 

@@ -5,6 +5,10 @@ struct RootView: View {
     @StateObject private var scheduledWorkoutStore = ScheduledWorkoutStore()
     @StateObject private var healthViewModel = HealthViewModel()
     @StateObject private var googleAuthManager = GoogleAuthManager()
+    @StateObject private var intervalsICUViewModel = IntervalsICUViewModel()
+    @StateObject private var preferencesStore = PreferencesStore()
+
+    private let calendarFeedClient = CalendarFeedClient(token: FeedTokenStore.token())
 
     var body: some View {
         Group {
@@ -15,22 +19,38 @@ struct RootView: View {
                 let calendarViewModel = GoogleCalendarViewModel(authManager: googleAuthManager, apiClient: googleCalendarAPIClient)
 
                 TabView {
-                    DashboardView(viewModel: dashboardViewModel, healthViewModel: healthViewModel, calendarViewModel: calendarViewModel)
-                        .tabItem { Label("Training", systemImage: "chart.bar") }
-                    CalendarView(viewModel: CalendarViewModel(apiClient: apiClient), scheduledWorkoutStore: scheduledWorkoutStore)
-                        .tabItem { Label("Calendar", systemImage: "calendar") }
+                    DashboardView(
+                        viewModel: dashboardViewModel,
+                        healthViewModel: healthViewModel,
+                        calendarViewModel: calendarViewModel,
+                        intervalsICUViewModel: intervalsICUViewModel
+                    )
+                    .tabItem { Label("Training", systemImage: "chart.bar") }
+                    CalendarView(
+                        viewModel: CalendarViewModel(apiClient: apiClient),
+                        scheduledWorkoutStore: scheduledWorkoutStore,
+                        calendarFeedClient: calendarFeedClient
+                    )
+                    .tabItem { Label("Calendar", systemImage: "calendar") }
                     CoachChatView(
                         viewModel: CoachChatViewModel(
                             dashboardViewModel: dashboardViewModel,
                             scheduledWorkoutStore: scheduledWorkoutStore,
                             healthViewModel: healthViewModel,
-                            calendarViewModel: calendarViewModel
+                            calendarViewModel: calendarViewModel,
+                            intervalsICUViewModel: intervalsICUViewModel,
+                            preferencesStore: preferencesStore
                         )
                     )
                     .tabItem { Label("Coach", systemImage: "bubble.left.and.bubble.right") }
                 }
                 .onAppear {
                     scheduledWorkoutStore.googleCalendarClient = googleCalendarAPIClient
+                    scheduledWorkoutStore.intervalsICUClient = intervalsICUViewModel.client
+                    scheduledWorkoutStore.calendarFeedClient = calendarFeedClient
+                }
+                .onChange(of: intervalsICUViewModel.isConnected) { _ in
+                    scheduledWorkoutStore.intervalsICUClient = intervalsICUViewModel.client
                 }
             } else {
                 ConnectStravaView()

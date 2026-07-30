@@ -43,6 +43,18 @@ enum SportCategory: String, CaseIterable, Identifiable {
     }
 }
 
+struct EfficiencyPoint: Identifiable {
+    let id: Date // month start
+    let monthStart: Date
+    /// Average speed (m/s) divided by average heart rate (bpm) for the
+    /// month — a rough "aerobic efficiency" proxy: it rises as the same
+    /// heart rate produces more speed, similar in spirit to the
+    /// power-per-heartbeat "efficiency factor" cycling coaches track, but
+    /// computed from Strava's activity summaries rather than full
+    /// power/HR streams, so it isn't adjusted for terrain, wind, or heat.
+    let efficiencyFactor: Double
+}
+
 struct PeriodTotals {
     let distanceMeters: Double
     let elevationGainMeters: Double
@@ -67,6 +79,7 @@ final class DashboardViewModel: ObservableObject {
     @Published private(set) var acuteChronicRatio: Double?
     @Published private(set) var trainingStatus: TrainingStatus?
     @Published private(set) var sportTotals: [SportCategory: SportTotals] = [:]
+    @Published private(set) var efficiencyTrend: [SportCategory: [EfficiencyPoint]] = [:]
     @Published private(set) var isLoading = false
     @Published var errorMessage: String?
 
@@ -76,6 +89,8 @@ final class DashboardViewModel: ObservableObject {
     private let lookbackDays = 370
     /// The acute:chronic load trend only needs the trailing 90 days.
     private let loadTrendDays = 90
+    /// How far back the aerobic efficiency trend looks.
+    private let efficiencyTrendMonths = 6
 
     init(apiClient: StravaAPIClient) {
         self.apiClient = apiClient
@@ -92,6 +107,7 @@ final class DashboardViewModel: ObservableObject {
             recentActivities = activities.sorted { $0.startDateLocal > $1.startDateLocal }
             weeklySummaries = Self.buildWeeklySummaries(from: activities)
             sportTotals = Self.buildSportTotals(from: activities)
+            efficiencyTrend = Self.buildEfficiencyTrend(from: activities, months: efficiencyTrendMonths)
             let series = Self.buildLoadSeries(from: activities, days: loadTrendDays)
             loadSeries = series
             if let latest = series.last, latest.chronicLoad > 0 {
@@ -199,6 +215,46 @@ final class DashboardViewModel: ObservableObject {
         return points
     }
 
+    /// Monthly average "speed per heartbeat" per sport, over activities
+    /// that have both a heart rate and a speed recorded. Skips a sport
+    /// entirely if fewer than two months have data — one point isn't a
+    /// trend.
+    private static func buildEfficiencyTrend(from activities: [StravaActivity], months: Int) -> [SportCategory: [EfficiencyPoint]] {
+        let calendar = Calendar.current
+        guard let cutoff = calendar.date(byAdding: .month, value: -months, to: Date()) else { return [:] }
+
+        var result: [SportCategory: [EfficiencyPoint]] = [:]
+        for category in SportCategory.allCases {
+            let matched = activities.filter {
+                SportCategory.matching($0) == category &&
+                $0.startDateLocal >= cutoff &&
+                ($0.averageHeartrate ?? 0) > 0 &&
+                ($0.averageSpeed ?? 0) > 0
+            }
+            guard !matched.isEmpty else { continue }
+
+            let grouped = Dictionary(grouping: matched) { activity in
+                calendar.dateInterval(of: .month, for: activity.startDateLocal)?.start ?? activity.startDateLocal
+            }
+
+            let points = grouped.compactMap { monthStart, monthActivities -> EfficiencyPoint? in
+                let factors = monthActivities.compactMap { activity -> Double? in
+                    guard let speed = activity.averageSpeed, let heartrate = activity.averageHeartrate, heartrate > 0 else { return nil }
+                    return speed / heartrate
+                }
+                guard !factors.isEmpty else { return nil }
+                let average = factors.reduce(0, +) / Double(factors.count)
+                return EfficiencyPoint(id: monthStart, monthStart: monthStart, efficiencyFactor: average)
+            }
+            .sorted { $0.monthStart < $1.monthStart }
+
+            if points.count >= 2 {
+                result[category] = points
+            }
+        }
+        return result
+    }
+
     private static func status(forRatio ratio: Double) -> TrainingStatus {
         switch ratio {
         case ..<0.8: return .detraining
@@ -243,6 +299,17 @@ final class DashboardViewModel: ObservableObject {
                     "\(activity.name) (\(activity.type), \(Units.formattedMiles(activity.distance)), \(activity.movingTime / 60) min)"
                 )
             }
+        }
+
+        for category in SportCategory.allCases {
+            guard let points = efficiencyTrend[category], let first = points.first, let last = points.last, first.efficiencyFactor > 0 else { continue }
+            let percentChange = ((last.efficiencyFactor - first.efficiencyFactor) / first.efficiencyFactor) * 100
+            let direction = percentChange >= 0 ? "up" : "down"
+            lines.append(
+                "\(category.rawValue) aerobic efficiency (speed per heartbeat) trending \(direction) " +
+                "\(String(format: "%.0f", abs(percentChange)))% over the last \(points.count) months — a rough " +
+                "fitness/fatigue-resistance proxy from Strava's activity summaries, not adjusted for terrain or weather."
+            )
         }
 
         return lines.joined(separator: "\n")

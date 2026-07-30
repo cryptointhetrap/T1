@@ -14,6 +14,14 @@ final class ScheduledWorkoutStore: ObservableObject {
     /// Failures are swallowed; the local schedule stays the source of
     /// truth regardless of whether the mirrored event succeeds.
     var googleCalendarClient: GoogleCalendarAPIClient?
+    /// Same idea for intervals.icu, when connected — pushes each scheduled
+    /// workout there as a planned event so it shows up on the athlete's
+    /// intervals.icu calendar too.
+    var intervalsICUClient: IntervalsICUAPIClient?
+    /// Optional — when set, every save also best-effort uploads the current
+    /// schedule to the backend's `.ics` feed endpoint so external calendar
+    /// apps subscribed to it stay current.
+    var calendarFeedClient: CalendarFeedClient?
 
     private let fileURL: URL
     private let calendar = Calendar.current
@@ -61,23 +69,54 @@ final class ScheduledWorkoutStore: ObservableObject {
         save()
     }
 
+    private func setIntervalsEventID(id: UUID, eventID: Int) {
+        guard let index = workouts.firstIndex(where: { $0.id == id }) else { return }
+        workouts[index].intervalsEventID = eventID
+        save()
+    }
+
     private func syncCreate(_ workout: ScheduledWorkout) {
-        guard let client = googleCalendarClient else { return }
-        Task {
-            if let eventID = try? await client.createEvent(for: workout) {
-                setGoogleEventID(id: workout.id, eventID: eventID)
+        if let client = googleCalendarClient {
+            Task {
+                if let eventID = try? await client.createEvent(for: workout) {
+                    setGoogleEventID(id: workout.id, eventID: eventID)
+                }
             }
         }
+        if let client = intervalsICUClient {
+            Task {
+                if let eventID = try? await client.createEvent(for: workout) {
+                    setIntervalsEventID(id: workout.id, eventID: eventID)
+                }
+            }
+        }
+        uploadFeed()
     }
 
     private func syncUpdate(_ workout: ScheduledWorkout) {
-        guard let client = googleCalendarClient, let eventID = workout.googleEventID else { return }
-        Task { try? await client.updateEvent(eventID: eventID, workout: workout) }
+        if let client = googleCalendarClient, let eventID = workout.googleEventID {
+            Task { try? await client.updateEvent(eventID: eventID, workout: workout) }
+        }
+        if let client = intervalsICUClient, let eventID = workout.intervalsEventID {
+            Task { try? await client.updateEvent(eventID: eventID, workout: workout) }
+        }
+        uploadFeed()
     }
 
     private func syncDelete(_ workout: ScheduledWorkout) {
-        guard let client = googleCalendarClient, let eventID = workout.googleEventID else { return }
-        Task { try? await client.deleteEvent(eventID: eventID) }
+        if let client = googleCalendarClient, let eventID = workout.googleEventID {
+            Task { try? await client.deleteEvent(eventID: eventID) }
+        }
+        if let client = intervalsICUClient, let eventID = workout.intervalsEventID {
+            Task { try? await client.deleteEvent(eventID: eventID) }
+        }
+        uploadFeed()
+    }
+
+    private func uploadFeed() {
+        guard let calendarFeedClient else { return }
+        let snapshot = workouts
+        Task { try? await calendarFeedClient.upload(snapshot) }
     }
 
     private func load() {

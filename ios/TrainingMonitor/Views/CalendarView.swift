@@ -3,11 +3,14 @@ import SwiftUI
 struct CalendarView: View {
     @StateObject private var viewModel: CalendarViewModel
     @ObservedObject private var scheduledWorkoutStore: ScheduledWorkoutStore
+    let calendarFeedClient: CalendarFeedClient
     @State private var selectedDay: SelectedDay?
+    @State private var showFeedSheet = false
 
-    init(viewModel: CalendarViewModel, scheduledWorkoutStore: ScheduledWorkoutStore) {
+    init(viewModel: CalendarViewModel, scheduledWorkoutStore: ScheduledWorkoutStore, calendarFeedClient: CalendarFeedClient) {
         _viewModel = StateObject(wrappedValue: viewModel)
         self.scheduledWorkoutStore = scheduledWorkoutStore
+        self.calendarFeedClient = calendarFeedClient
     }
 
     var body: some View {
@@ -33,6 +36,15 @@ struct CalendarView: View {
                 .padding()
             }
             .navigationTitle("Calendar")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        showFeedSheet = true
+                    } label: {
+                        Image(systemName: "square.and.arrow.up.on.square")
+                    }
+                }
+            }
             .sheet(item: $selectedDay) { selected in
                 DayActivitiesView(
                     day: selected.date,
@@ -40,6 +52,9 @@ struct CalendarView: View {
                     scheduledWorkouts: scheduledWorkoutStore.workouts(on: selected.date),
                     onDeleteScheduled: { scheduledWorkoutStore.delete(id: $0) }
                 )
+            }
+            .sheet(isPresented: $showFeedSheet) {
+                CalendarFeedView(feedClient: calendarFeedClient)
             }
         }
     }

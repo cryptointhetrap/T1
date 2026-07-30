@@ -25,10 +25,12 @@ app short-lived tokens.
 2. **Get an Anthropic API key** (for the Coach chat tab): https://console.anthropic.com
 3. **(Optional) Set up a Google Cloud OAuth client** for Google Calendar
    sync — see `ios/README.md` → *Google Calendar setup*. Apple Health
-   needs no external setup at all.
+   needs no external setup at all, and Intervals.icu just needs an API key
+   from your own account (see below) — no console setup either.
 4. **Run the backend** — see `backend/README.md`. For local development
    against the iOS Simulator, `http://localhost:8787` (the default) works
-   out of the box.
+   out of the box. Deploy it somewhere reachable from the internet if you
+   want the `.ics` calendar feed to work from other devices/apps.
 5. **Build the iOS app** — see `ios/README.md`. Requires a Mac with Xcode
    and [XcodeGen](https://github.com/yonaskolb/XcodeGen) (this repo doesn't
    include a hand-built `.xcodeproj`; `xcodegen generate` produces one from
@@ -58,6 +60,22 @@ app short-lived tokens.
 - Google Calendar (optional, connect from the Training tab's `•••` menu):
   scheduled workouts are pushed there as real events, and Claude reads
   your upcoming events back so it avoids proposing a time that conflicts
+- Intervals.icu (optional, connect from the Training tab's `•••` menu with
+  a self-serve API key — no OAuth): pulls in intervals.icu's own
+  CTL/ATL/form fitness-and-fatigue numbers alongside Apple Health in the
+  Recovery section and the coach's context, and pushes scheduled workouts
+  there as planned events, same as Google Calendar
+- Aerobic efficiency trend: a monthly "speed per heartbeat" trend per
+  sport, computed from Strava's own activity summaries, shown as a chart
+  on the Training tab and summarized for the coach — a rough proxy for
+  whether you're getting fitter without needing full power/HR streams
+- Goals & preferences: an open free-text box (Coach tab, target-icon
+  button) for anything the coach should know — races, equipment, recovery
+  tools, blackout days, injuries — sent along with every chat message
+- Calendar feed (Calendar tab, share-icon button): a subscribable `.ics`
+  URL for your scheduled workouts, so Apple Calendar, Google Calendar, or
+  any other app that supports URL calendar subscriptions can mirror your
+  schedule read-only
 
 ## What's next
 
@@ -68,6 +86,12 @@ in order of how self-contained they are:
 - Weekly goal setting + progress rings
 - Push notifications (e.g. a weekly recap, or an overload warning)
 - Home screen widgets / Live Activities
+
+Integrations that exist but weren't added here because they require a
+partner-approved developer program (not something this app can self-serve
+into, unlike Strava/Google/Intervals.icu): Wahoo, Hammerhead, Zwift,
+Rouvy, and pushing structured workouts directly to head units. Worth
+revisiting if you want to apply for that access yourself.
 
 Tell me which of these (or something else) you want next and I'll build it
 on top of this foundation.

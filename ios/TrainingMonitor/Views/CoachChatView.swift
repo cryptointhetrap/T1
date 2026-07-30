@@ -3,6 +3,7 @@ import SwiftUI
 struct CoachChatView: View {
     @StateObject private var viewModel: CoachChatViewModel
     @State private var draft = ""
+    @State private var showPreferences = false
 
     init(viewModel: CoachChatViewModel) {
         _viewModel = StateObject(wrappedValue: viewModel)
@@ -64,6 +65,18 @@ struct CoachChatView: View {
                 .padding()
             }
             .navigationTitle("Coach")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        showPreferences = true
+                    } label: {
+                        Image(systemName: "target")
+                    }
+                }
+            }
+            .sheet(isPresented: $showPreferences) {
+                PreferencesView(store: viewModel.preferencesStore)
+            }
             .task { await viewModel.refreshCalendarContext() }
             .alert("Something went wrong", isPresented: .constant(viewModel.errorMessage != nil)) {
                 Button("OK") { viewModel.errorMessage = nil }

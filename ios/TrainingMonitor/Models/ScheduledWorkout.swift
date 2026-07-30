@@ -13,13 +13,16 @@ struct ScheduledWorkout: Identifiable, Codable, Equatable {
     /// later edits/deletes update or remove that same event instead of
     /// creating a duplicate.
     var googleEventID: String?
+    /// Same idea for a mirrored intervals.icu calendar event.
+    var intervalsEventID: Int?
 
-    init(id: UUID = UUID(), date: Date, sport: String, title: String, notes: String = "", googleEventID: String? = nil) {
+    init(id: UUID = UUID(), date: Date, sport: String, title: String, notes: String = "", googleEventID: String? = nil, intervalsEventID: Int? = nil) {
         self.id = id
         self.date = date
         self.sport = sport
         self.title = title
         self.notes = notes
         self.googleEventID = googleEventID
+        self.intervalsEventID = intervalsEventID
     }
 }

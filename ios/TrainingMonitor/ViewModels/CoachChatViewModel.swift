@@ -11,23 +11,31 @@ final class CoachChatViewModel: ObservableObject {
     private let scheduledWorkoutStore: ScheduledWorkoutStore
     private let healthViewModel: HealthViewModel
     private let calendarViewModel: GoogleCalendarViewModel
+    private let intervalsICUViewModel: IntervalsICUViewModel
+    let preferencesStore: PreferencesStore
 
     init(
         dashboardViewModel: DashboardViewModel,
         scheduledWorkoutStore: ScheduledWorkoutStore,
         healthViewModel: HealthViewModel,
-        calendarViewModel: GoogleCalendarViewModel
+        calendarViewModel: GoogleCalendarViewModel,
+        intervalsICUViewModel: IntervalsICUViewModel,
+        preferencesStore: PreferencesStore
     ) {
         self.dashboardViewModel = dashboardViewModel
         self.scheduledWorkoutStore = scheduledWorkoutStore
         self.healthViewModel = healthViewModel
         self.calendarViewModel = calendarViewModel
+        self.intervalsICUViewModel = intervalsICUViewModel
+        self.preferencesStore = preferencesStore
     }
 
-    /// Refreshes upcoming Google Calendar events so they're current before
-    /// the athlete starts chatting. Cheap no-op if not connected.
+    /// Refreshes upcoming Google Calendar events and intervals.icu wellness
+    /// so they're current before the athlete starts chatting. Cheap no-op
+    /// for whichever of the two isn't connected.
     func refreshCalendarContext() async {
         await calendarViewModel.refresh()
+        await intervalsICUViewModel.refresh()
     }
 
     func send(_ text: String) async {
@@ -44,7 +52,9 @@ final class CoachChatViewModel: ObservableObject {
                 dashboardViewModel.trainingSummaryText(),
                 scheduleContextText(),
                 healthViewModel.summaryText(),
+                intervalsICUViewModel.summaryText(),
                 calendarViewModel.conflictContextText(),
+                preferencesStore.summaryText(),
             ]
             .filter { !$0.isEmpty }
             .joined(separator: "\n\n")
