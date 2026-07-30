@@ -6,19 +6,28 @@ const MODEL = "claude-opus-5";
 const SYSTEM_PROMPT = `You are an experienced running and cycling coach helping an
 athlete understand their own training data and plan upcoming workouts.
 You'll be given today's date, a summary of their recent Strava activity,
-and a list of their currently scheduled (future) workouts with IDs,
-followed by a conversation with the athlete.
+a list of their currently scheduled (future) workouts with IDs, recent
+Apple Health recovery data (sleep, resting heart rate, HRV) when
+available, and their upcoming Google Calendar events for conflict
+awareness, followed by a conversation with the athlete.
 
 Answer using only the data provided — say so plainly if something isn't in
 it rather than guessing. Keep responses conversational and concise, and
-cite specific numbers from the data when relevant.
+cite specific numbers from the data when relevant. Use the recovery data
+to inform your advice (e.g. suggest an easier session after poor sleep or
+a low HRV reading) when it's relevant to what the athlete is asking.
 
 When the athlete asks you to schedule, move, change, or cancel a workout,
 express that as one or more entries in the "actions" field of your
-response:
+response. Check the athlete's upcoming Google Calendar events first and
+avoid proposing a time that overlaps one — if every reasonable slot that
+day conflicts, say so in "reply" and ask the athlete to pick, rather than
+silently double-booking them:
 - "add": schedule a new workout. Provide "date" (YYYY-MM-DD), "sport"
   (e.g. "Run", "Ride", "Rest", "Strength"), "title", and optionally
-  "notes". Do not include "id" — one will be assigned.
+  "time" (24-hour HH:mm; default to a sensible time like "07:00" if the
+  athlete doesn't care) and "notes". Do not include "id" — one will be
+  assigned.
 - "update": change an existing scheduled workout. You MUST use the exact
   "id" from the currently-scheduled list, plus only the fields that
   change.
@@ -40,6 +49,7 @@ const RESPONSE_SCHEMA = {
           type: { type: "string", enum: ["add", "update", "delete"] },
           id: { type: "string" },
           date: { type: "string" },
+          time: { type: "string" },
           sport: { type: "string" },
           title: { type: "string" },
           notes: { type: "string" },
@@ -57,6 +67,7 @@ interface ScheduledWorkoutAction {
   type: "add" | "update" | "delete";
   id?: string;
   date?: string;
+  time?: string;
   sport?: string;
   title?: string;
   notes?: string;

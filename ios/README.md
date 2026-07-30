@@ -12,6 +12,12 @@ Claude can also schedule, move, or cancel future workouts there, which
 show up as hollow calendar markers alongside completed activities.
 Distances are shown in miles, elevation gain in feet.
 
+Two more connections, both optional, from the Training tab's `•••` menu:
+Apple Health (sleep, resting heart rate, HRV, shown in a Recovery section
+and fed into the coach's context) and Google Calendar (scheduled workouts
+are pushed there as real events, and Claude reads your upcoming events
+back so it can avoid double-booking you).
+
 This project was scaffolded without Xcode (built in a Linux container), so
 it uses [XcodeGen](https://github.com/yonaskolb/XcodeGen) to generate the
 `.xcodeproj` deterministically from `project.yml` rather than shipping a
@@ -30,7 +36,12 @@ In Xcode:
 1. Select the `TrainingMonitor` target → **Signing & Capabilities** → set
    your Team, and change `PRODUCT_BUNDLE_IDENTIFIER` in `project.yml`
    (then re-run `xcodegen generate`) if `com.trainingmonitor.app` is taken.
-2. Add a real 1024x1024 app icon to
+2. Still on **Signing & Capabilities**, confirm **HealthKit** is listed
+   (it's already declared in `TrainingMonitor.entitlements`); with
+   automatic signing Xcode enables the capability on your App ID the
+   first time it builds. With manual signing you'll need to add it to the
+   App ID yourself in the Apple Developer portal first.
+3. Add a real 1024x1024 app icon to
    `TrainingMonitor/Assets.xcassets/AppIcon.appiconset` before shipping —
    a placeholder Contents.json is there but no image yet.
 
@@ -41,11 +52,44 @@ Edit `TrainingMonitor/Config/AppConfig.swift`:
 - `stravaClientID` — from your app at https://www.strava.com/settings/api
 - `backendBaseURL` — wherever you deployed `../backend` (defaults to
   `http://localhost:8787` for local testing against the simulator)
+- `googleClientID` / `googleRedirectScheme` — see **Google Calendar
+  setup** below. Leave as the placeholders if you don't want that
+  connection; the app runs fine without it, the menu button just won't
+  complete.
 
 Also register the OAuth redirect: this app uses the custom URL scheme
 `trainingmonitor://oauth-callback`, which is already declared in
 `Info.plist` — nothing to configure on the Strava side for the redirect
 itself (Strava mobile OAuth allows custom URL scheme callbacks).
+
+### Google Calendar setup
+
+Unlike Strava, Google's OAuth for the "iOS" client type needs no client
+secret (PKCE proves the request instead), so there's nothing to add to the
+backend — it's entirely client-side:
+
+1. In [Google Cloud Console](https://console.cloud.google.com), create/select
+   a project, enable the **Google Calendar API**, then go to **APIs &
+   Services → Credentials → Create Credentials → OAuth client ID** and
+   choose type **iOS**. Use your app's bundle ID
+   (`com.trainingmonitor.app` or whatever you changed it to).
+2. Copy the generated client ID (looks like
+   `1234567890-abc123.apps.googleusercontent.com`) into
+   `AppConfig.googleClientID`.
+3. The **reversed** form of that same ID
+   (`com.googleusercontent.apps.1234567890-abc123`) goes in two places:
+   `AppConfig.googleRedirectScheme` and the second `CFBundleURLSchemes`
+   entry in `Info.plist`.
+4. The OAuth consent screen will show an "unverified app" warning until
+   you submit for Google's verification — expected and fine for personal
+   use; click through it (Google restricts this to a testers list you
+   control until then).
+
+### Apple Health
+
+No account or console setup — HealthKit permission is a plain system
+dialog. Testing sleep data specifically works best on a real device (the
+Simulator's Health app has no real sleep history to read).
 
 ## How auth works
 
@@ -65,11 +109,13 @@ itself (Strava mobile OAuth allows custom URL scheme callbacks).
 TrainingMonitor/
   App/            App entry point (@main)
   Config/         Client ID / backend URL constants
-  Models/         Codable Strava API models, unit conversions
-  Services/       Keychain, OAuth, backend client, Strava API client,
-                  coach chat client, local scheduled-workout store
+  Models/         Codable Strava/Google API models, unit conversions
+  Services/       Keychain, Strava + Google OAuth, backend client,
+                  Strava/Google Calendar API clients, coach chat client,
+                  local scheduled-workout store, HealthKit manager
   ViewModels/      Training-load aggregation (weekly + acute:chronic),
-                  calendar month pagination, coach chat
+                  calendar month pagination, coach chat, Health, Google
+                  Calendar
   Views/          SwiftUI screens and chart components
 ```
 
@@ -78,5 +124,4 @@ TrainingMonitor/
 - Per-sport filtering (run/ride/swim) on the dashboard
 - Push notifications for weekly summaries
 - Goal setting (weekly distance/time targets) with progress rings
-- HealthKit cross-check for recovery metrics (HRV, resting HR)
 - Widgets / Live Activities for an in-progress activity

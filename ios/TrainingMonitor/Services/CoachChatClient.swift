@@ -7,6 +7,7 @@ struct ScheduledWorkoutAction: Codable {
     let type: String
     let id: String?
     let date: String?
+    let time: String?
     let sport: String?
     let title: String?
     let notes: String?

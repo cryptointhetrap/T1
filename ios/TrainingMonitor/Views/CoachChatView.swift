@@ -64,6 +64,7 @@ struct CoachChatView: View {
                 .padding()
             }
             .navigationTitle("Coach")
+            .task { await viewModel.refreshCalendarContext() }
             .alert("Something went wrong", isPresented: .constant(viewModel.errorMessage != nil)) {
                 Button("OK") { viewModel.errorMessage = nil }
             } message: {

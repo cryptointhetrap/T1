@@ -9,10 +9,25 @@ final class CoachChatViewModel: ObservableObject {
 
     private let dashboardViewModel: DashboardViewModel
     private let scheduledWorkoutStore: ScheduledWorkoutStore
+    private let healthViewModel: HealthViewModel
+    private let calendarViewModel: GoogleCalendarViewModel
 
-    init(dashboardViewModel: DashboardViewModel, scheduledWorkoutStore: ScheduledWorkoutStore) {
+    init(
+        dashboardViewModel: DashboardViewModel,
+        scheduledWorkoutStore: ScheduledWorkoutStore,
+        healthViewModel: HealthViewModel,
+        calendarViewModel: GoogleCalendarViewModel
+    ) {
         self.dashboardViewModel = dashboardViewModel
         self.scheduledWorkoutStore = scheduledWorkoutStore
+        self.healthViewModel = healthViewModel
+        self.calendarViewModel = calendarViewModel
+    }
+
+    /// Refreshes upcoming Google Calendar events so they're current before
+    /// the athlete starts chatting. Cheap no-op if not connected.
+    func refreshCalendarContext() async {
+        await calendarViewModel.refresh()
     }
 
     func send(_ text: String) async {
@@ -25,7 +40,15 @@ final class CoachChatViewModel: ObservableObject {
         defer { isSending = false }
 
         do {
-            let context = dashboardViewModel.trainingSummaryText() + "\n\n" + scheduleContextText()
+            let context = [
+                dashboardViewModel.trainingSummaryText(),
+                scheduleContextText(),
+                healthViewModel.summaryText(),
+                calendarViewModel.conflictContextText(),
+            ]
+            .filter { !$0.isEmpty }
+            .joined(separator: "\n\n")
+
             let result = try await CoachChatClient.send(messages: messages, context: context)
             apply(result.actions)
             messages.append(result.message)
@@ -48,7 +71,8 @@ final class CoachChatViewModel: ObservableObject {
             for workout in upcoming {
                 let notes = workout.notes.isEmpty ? "" : " — \(workout.notes)"
                 lines.append(
-                    "- id \(workout.id.uuidString), \(Self.dateFormatter.string(from: workout.date)), " +
+                    "- id \(workout.id.uuidString), \(Self.dateFormatter.string(from: workout.date)) " +
+                    "\(Self.timeFormatter.string(from: workout.date)), " +
                     "\(workout.sport), \"\(workout.title)\"\(notes)"
                 )
             }
@@ -61,7 +85,7 @@ final class CoachChatViewModel: ObservableObject {
         for action in actions {
             switch action.type {
             case "add":
-                guard let dateString = action.date, let date = Self.parseDate(dateString) else { continue }
+                guard let dateString = action.date, let date = Self.combinedDate(dateString: dateString, timeString: action.time) else { continue }
                 scheduledWorkoutStore.add(
                     date: date,
                     sport: action.sport ?? "Other",
@@ -70,9 +94,14 @@ final class CoachChatViewModel: ObservableObject {
                 )
             case "update":
                 guard let idString = action.id, let id = UUID(uuidString: idString) else { continue }
+                let newDate = Self.resolvedUpdateDate(
+                    dateString: action.date,
+                    timeString: action.time,
+                    existing: scheduledWorkoutStore.workouts.first(where: { $0.id == id })
+                )
                 scheduledWorkoutStore.update(
                     id: id,
-                    date: action.date.flatMap(Self.parseDate),
+                    date: newDate,
                     sport: action.sport,
                     title: action.title,
                     notes: action.notes
@@ -86,6 +115,29 @@ final class CoachChatViewModel: ObservableObject {
         }
     }
 
+    /// Resolves the new date for an "update" action: a full replacement if
+    /// Claude gave a new date, a same-day time change if it only gave a
+    /// time, or no change at all.
+    private static func resolvedUpdateDate(dateString: String?, timeString: String?, existing: ScheduledWorkout?) -> Date? {
+        if let dateString {
+            return combinedDate(dateString: dateString, timeString: timeString)
+        }
+        if let timeString, let existing {
+            return combinedDate(dateString: Self.dateFormatter.string(from: existing.date), timeString: timeString)
+        }
+        return nil
+    }
+
+    private static func combinedDate(dateString: String, timeString: String?) -> Date? {
+        guard let day = dateFormatter.date(from: dateString) else { return nil }
+        let calendar = Calendar.current
+        if let timeString, let time = timeFormatter.date(from: timeString) {
+            let components = calendar.dateComponents([.hour, .minute], from: time)
+            return calendar.date(bySettingHour: components.hour ?? 7, minute: components.minute ?? 0, second: 0, of: day)
+        }
+        return calendar.date(bySettingHour: 7, minute: 0, second: 0, of: day)
+    }
+
     private static let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.calendar = Calendar(identifier: .gregorian)
@@ -94,7 +146,11 @@ final class CoachChatViewModel: ObservableObject {
         return formatter
     }()
 
-    private static func parseDate(_ string: String) -> Date? {
-        dateFormatter.date(from: string)
-    }
+    private static let timeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.timeZone = .current
+        formatter.dateFormat = "HH:mm"
+        return formatter
+    }()
 }

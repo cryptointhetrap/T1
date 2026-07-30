@@ -9,12 +9,17 @@ struct ScheduledWorkout: Identifiable, Codable, Equatable {
     var sport: String
     var title: String
     var notes: String
+    /// Set once this workout has been mirrored to Google Calendar, so
+    /// later edits/deletes update or remove that same event instead of
+    /// creating a duplicate.
+    var googleEventID: String?
 
-    init(id: UUID = UUID(), date: Date, sport: String, title: String, notes: String = "") {
+    init(id: UUID = UUID(), date: Date, sport: String, title: String, notes: String = "", googleEventID: String? = nil) {
         self.id = id
         self.date = date
         self.sport = sport
         self.title = title
         self.notes = notes
+        self.googleEventID = googleEventID
     }
 }

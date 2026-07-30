@@ -23,10 +23,13 @@ app short-lived tokens.
 1. **Register a Strava API app**: https://www.strava.com/settings/api
    (gives you a Client ID and Client Secret).
 2. **Get an Anthropic API key** (for the Coach chat tab): https://console.anthropic.com
-3. **Run the backend** — see `backend/README.md`. For local development
+3. **(Optional) Set up a Google Cloud OAuth client** for Google Calendar
+   sync — see `ios/README.md` → *Google Calendar setup*. Apple Health
+   needs no external setup at all.
+4. **Run the backend** — see `backend/README.md`. For local development
    against the iOS Simulator, `http://localhost:8787` (the default) works
    out of the box.
-4. **Build the iOS app** — see `ios/README.md`. Requires a Mac with Xcode
+5. **Build the iOS app** — see `ios/README.md`. Requires a Mac with Xcode
    and [XcodeGen](https://github.com/yonaskolb/XcodeGen) (this repo doesn't
    include a hand-built `.xcodeproj`; `xcodegen generate` produces one from
    `ios/project.yml`).
@@ -49,6 +52,12 @@ app short-lived tokens.
   shown in the Training tab. Claude can also add, move, or cancel
   scheduled (future) workouts on your behalf, which then show up as
   hollow markers on the Calendar tab alongside completed activities
+- Apple Health: sleep, resting heart rate, and HRV shown in a Recovery
+  section on the Training tab and folded into the coach's context, so its
+  advice can account for how well-recovered you are
+- Google Calendar (optional, connect from the Training tab's `•••` menu):
+  scheduled workouts are pushed there as real events, and Claude reads
+  your upcoming events back so it avoids proposing a time that conflicts
 
 ## What's next
 
@@ -58,7 +67,6 @@ in order of how self-contained they are:
 - Swim/other sports in the per-sport breakdown
 - Weekly goal setting + progress rings
 - Push notifications (e.g. a weekly recap, or an overload warning)
-- HealthKit integration for recovery signals (resting HR, HRV, sleep)
 - Home screen widgets / Live Activities
 
 Tell me which of these (or something else) you want next and I'll build it

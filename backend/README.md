@@ -7,18 +7,23 @@ and the **Anthropic API key** out of the iOS app.
   login) for an `access_token` / `refresh_token` pair.
 - `POST /auth/refresh` — exchanges a stored `refresh_token` for a fresh
   `access_token` once the old one expires.
-- `POST /chat/coach` — forwards a chat conversation plus a training-data
-  summary to Claude and returns its reply as structured JSON: a `reply`
-  string plus an `actions` array the athlete's device applies to its
-  locally-stored scheduled workouts (add/update/delete). This endpoint
-  holds no schedule data itself — the device sends its current schedule
-  as part of the request context, and Claude's proposed changes travel
+- `POST /chat/coach` — forwards a chat conversation plus a context string to
+  Claude and returns its reply as structured JSON: a `reply` string plus an
+  `actions` array the athlete's device applies to its locally-stored
+  scheduled workouts (add/update/delete, with an optional time-of-day).
+  This endpoint holds no schedule, Health, or calendar data itself — the
+  device assembles all of that (current schedule, recent Strava activity,
+  Apple Health recovery metrics, upcoming Google Calendar events) into the
+  `context` string on every request, and Claude's proposed changes travel
   back the same way.
 
-Everything else (activities, athlete stats, etc.) is called by the iOS app
-**directly against the Strava API** using the `access_token` returned here —
-this backend never proxies activity data, so it stays tiny and stateless. It
-holds no database and no user data.
+Everything else (Strava activities/stats, Apple Health, Google Calendar)
+is called by the iOS app **directly against those APIs** — this backend
+never proxies that data, so it stays tiny and stateless. It holds no
+database and no user data. Google Calendar in particular never touches
+this backend at all: Google issues no client secret for the "iOS" OAuth
+client type (PKCE proves the request instead), so that auth flow is
+entirely on-device.
 
 ## Setup
 
