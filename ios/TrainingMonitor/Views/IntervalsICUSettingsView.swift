@@ -17,7 +17,7 @@ struct IntervalsICUSettingsView: View {
                 if viewModel.isConnected {
                     Section("Status") {
                         Label("Connected", systemImage: "checkmark.circle.fill")
-                            .foregroundStyle(Color.mdGold)
+                            .foregroundStyle(Color.ghGreen)
                         if let wellness = viewModel.latestWellness, let ctl = wellness.ctl, let atl = wellness.atl {
                             LabeledContent("Fitness (CTL)", value: String(format: "%.0f", ctl))
                             LabeledContent("Fatigue (ATL)", value: String(format: "%.0f", atl))
@@ -46,7 +46,7 @@ struct IntervalsICUSettingsView: View {
                     if let errorMessage = viewModel.errorMessage {
                         Section {
                             Text(errorMessage)
-                                .foregroundStyle(Color.mdRed)
+                                .foregroundStyle(Color.red)
                         }
                     }
 

@@ -16,7 +16,7 @@ struct MotivationView: View {
 
                     Image(systemName: "flame.fill")
                         .font(.system(size: 40))
-                        .foregroundStyle(Color.mdGold)
+                        .foregroundStyle(Color.ghGreen)
 
                     if let quote = viewModel.quote {
                         Text(quote)
@@ -41,7 +41,7 @@ struct MotivationView: View {
                         }
                     }
                     .buttonStyle(.borderedProminent)
-                    .tint(Color.mdGold)
+                    .tint(Color.ghGreen)
                     .foregroundStyle(.black)
                     .disabled(viewModel.isLoading)
                     .padding(.bottom, 32)

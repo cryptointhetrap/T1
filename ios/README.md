@@ -52,19 +52,22 @@ system prompt (`backend/src/routes/chat.ts`) explicitly instructs Claude
 to write an original line in that spirit rather than fabricate and
 misattribute a quote to somebody real.
 
-The whole UI uses one small, deliberate palette: the Maryland state
-flag's gold, red, and black (`Views/Theme.swift`), in place of the
-assorted orange/blue/purple/green/yellow this app used earlier. Strava's
-own "Connect with Strava" button keeps Strava's brand orange per their
-usage guidelines — that one's intentionally not part of the theme.
+The whole UI uses one small, deliberate palette sampled straight from the
+Go Harder Ai Training logo: a bright lime green (`#A8D80A`) and a
+brushed-metal silver (`#C8C8C6`), both set against true black
+(`Views/Theme.swift`). Strava's own "Connect with Strava" button keeps
+Strava's brand orange per their usage guidelines — that one's
+intentionally not part of the theme. Genuine warning states (a failed
+connection, an elevated training-load status) use plain system red
+instead, since red isn't in the logo and still needs to read as a
+warning rather than an accent.
 
 The app is forced to a black, dark-appearance theme
-(`.preferredColorScheme(.dark)` in `TrainingMonitorApp`) regardless of the
-device's system setting. The red was swapped for Apple's own dark-mode
-system red (`#FF453A`) — the flag's `#E03C31` reads muddier on true
-black — and a couple of low-opacity fills (the training-status banner,
-the assistant chat bubble) were raised so they stay visible against
-black instead of nearly disappearing into it.
+(`.preferredColorScheme(.dark)` in `TrainingMonitorApp`) regardless of
+the device's system setting, so both accent colors were picked to read
+clearly on true black — and a couple of low-opacity fills (the
+training-status banner, the assistant chat bubble) were raised so they
+stay visible against black instead of nearly disappearing into it.
 
 This project was scaffolded without Xcode (built in a Linux container), so
 it uses [XcodeGen](https://github.com/yonaskolb/XcodeGen) to generate the

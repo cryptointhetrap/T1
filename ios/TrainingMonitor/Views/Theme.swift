@@ -1,14 +1,17 @@
 import SwiftUI
 
-/// The Maryland state flag's palette — Calvert gold/black, Crossland
-/// red/white — used as the app's whole accent scheme in place of the
-/// assorted orange/blue/purple/green/yellow used ad hoc elsewhere.
+/// The Go Harder Ai Training logo's palette — a bright lime green and a
+/// brushed-metal silver, both set against true black — used as the app's
+/// whole accent scheme. Replaces the earlier Maryland state flag gold/red.
+/// Genuine warning/error states (e.g. a failed connection, high training
+/// load) intentionally use system red instead, since red isn't part of
+/// this brand palette and still needs to read as a warning, not an accent.
 ///
 /// The app is forced to dark appearance (see `TrainingMonitorApp`), so
 /// every color here is chosen to read clearly on true black, not tuned
 /// for a light background.
 extension Color {
-    static let mdGold = Color(red: 1.00, green: 0.761, blue: 0.055) // #FFC20E — plenty bright on black as-is
-    static let mdRed = Color(red: 1.00, green: 0.271, blue: 0.227) // #FF453A — Apple's own dark-mode system red; the flag's #E03C31 is too muted on true black
-    static let mdBlack = Color.black
+    static let ghGreen = Color(red: 0.659, green: 0.847, blue: 0.039) // #A8D80A — sampled from the logo's lettering
+    static let ghSilver = Color(red: 0.784, green: 0.784, blue: 0.776) // #C8C8C6 — sampled from the logo's brushed-metal silver
+    static let ghBlack = Color.black
 }

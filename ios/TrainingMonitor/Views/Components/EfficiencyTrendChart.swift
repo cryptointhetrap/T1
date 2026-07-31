@@ -24,8 +24,8 @@ struct EfficiencyTrendChart: View {
             }
         }
         .chartForegroundStyleScale([
-            SportCategory.run.rawValue: Color.mdGold,
-            SportCategory.ride.rawValue: Color.mdRed,
+            SportCategory.run.rawValue: Color.ghGreen,
+            SportCategory.ride.rawValue: Color.ghSilver,
         ])
         .chartLegend(position: .bottom)
         .chartYAxis(.hidden)

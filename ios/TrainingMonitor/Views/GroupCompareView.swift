@@ -151,7 +151,7 @@ private struct GroupMemberRow: View {
         HStack {
             Text("\(rank)")
                 .font(.headline)
-                .foregroundStyle(rank == 1 ? Color.mdGold : Color.secondary)
+                .foregroundStyle(rank == 1 ? Color.ghGreen : Color.secondary)
                 .frame(width: 24, alignment: .leading)
             Text(member.displayName + (isMe ? " (you)" : ""))
                 .font(.subheadline.bold())

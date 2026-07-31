@@ -3,8 +3,8 @@ import SwiftUI
 extension SportCategory {
     var dotColor: Color {
         switch self {
-        case .run: return .mdGold
-        case .ride: return .mdRed
+        case .run: return .ghGreen
+        case .ride: return .ghSilver
         }
     }
 }
@@ -15,8 +15,8 @@ extension ScheduledWorkout {
     /// rather than literal black — black-on-black would vanish in dark mode.
     var dotColor: Color {
         let lowercased = sport.lowercased()
-        if lowercased.contains("run") { return .mdGold }
-        if lowercased.contains("ride") || lowercased.contains("bike") || lowercased.contains("cycl") { return .mdRed }
+        if lowercased.contains("run") { return .ghGreen }
+        if lowercased.contains("ride") || lowercased.contains("bike") || lowercased.contains("cycl") { return .ghSilver }
         return .primary
     }
 }
@@ -74,7 +74,7 @@ private struct DayCell: View {
         VStack(spacing: 3) {
             Text(day, format: .dateTime.day())
                 .font(.caption)
-                // Black, not white — the gold accent circle is bright enough
+                // Black, not white — the green accent circle is bright enough
                 // that white text on it fails contrast.
                 .foregroundStyle(isToday ? .black : .primary)
                 .frame(width: 24, height: 24)

@@ -25,7 +25,7 @@ struct MotivationSplashView: View {
 
                     Image(systemName: "flame.fill")
                         .font(.system(size: 36))
-                        .foregroundStyle(Color.mdGold)
+                        .foregroundStyle(Color.ghGreen)
 
                     if let quote = viewModel.quote {
                         Text(quote)

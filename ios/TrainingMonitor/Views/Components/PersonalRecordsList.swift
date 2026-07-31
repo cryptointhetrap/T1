@@ -24,7 +24,7 @@ struct PersonalRecordsList: View {
                             .font(.subheadline.bold())
                         Text(rankLabel(effort.prRank))
                             .font(.caption)
-                            .foregroundStyle(effort.prRank == 1 ? Color.mdGold : Color.secondary)
+                            .foregroundStyle(effort.prRank == 1 ? Color.ghGreen : Color.secondary)
                     }
                 }
                 .padding(.vertical, 6)
