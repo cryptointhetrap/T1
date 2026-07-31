@@ -1,61 +1,67 @@
 # Go Harder Ai Training (iOS)
 
-A SwiftUI app that connects to Strava and shows a training load / trends
-dashboard: weekly volume (distance/time/elevation), a By Sport section
-with weekly/monthly/yearly totals for Run, Bike, Swim, and Weight
-Training (mileage and elevation gain for the first three; duration and
-session count for Weight Training, since Strava reports no distance for
-it), a 7-day vs 28-day acute:chronic load trend, and a recent activities
-list. A second
-tab is an activity calendar that scrolls back through your entire Strava
-history, month by month, with a dot per day for each sport you did that
-day — tap a day to see its activities. A third tab is a chat with Claude,
-grounded in the same training data, for reviewing workouts and trends —
-Claude can also schedule, move, or cancel future workouts there, which
-show up as hollow calendar markers alongside completed activities.
-Distances are shown in miles, elevation gain in feet.
+A SwiftUI app that connects to Strava and Apple Health, across five tabs:
 
-Three more connections, all optional, from the Stats tab's `•••` menu:
-Apple Health (sleep, resting heart rate, HRV, shown in a Recovery section
-and fed into the coach's context), Google Calendar (scheduled workouts
-are pushed there as real events, and Claude reads your upcoming events
-back so it can avoid double-booking you), and Intervals.icu (a self-serve
-API key, no OAuth — pulls in its own CTL/ATL/form fitness-and-fatigue
-numbers, and pushes scheduled workouts there too). The Stats tab also
-shows: average/weighted watts and kilojoules on activities that have
-them; a monthly aerobic-efficiency trend per sport (real power-per-
-heartbeat for rides with a power meter, speed-per-heartbeat otherwise)
-once there's a few months of data; and a Recent PRs list of any run
-effort Strava currently ranks in your all-time top 3, found among your
-most recently synced runs. A "Longest Efforts" row on the Stats tab
-opens a separate page ranking your top 10 longest runs, top 10 longest
-rides, and top 10 longest swims across your entire Strava history (not
-just the ~370-day window everything else on the dashboard uses —
-Weight Training isn't ranked there, since it has no distance to rank
-by). A "Compare" row opens a page for
-creating or joining a small invite-code group with other Go Harder Ai
-Training
-users, to see everyone's current-month relative effort, hours, and
-mileage side by side — see *Compare groups* below for why this isn't a
-general Strava leaderboard. The Coach tab has a free-text
-goals &
-preferences box (target-icon button) for anything you want the coach to
-factor in — races, equipment, recovery tools, blackout days, injuries.
-The Calendar tab can hand you a subscribable `.ics` feed URL (share-icon
-button) for any calendar app. If you've set up the backend's optional
-Strava webhook subscription, the app also does a cheap foreground check
-and only does a full resync when something's actually new.
-
-A 5th tab, Motivation, shows one short, original Claude-written line in
-an intense, no-excuses training mindset — refreshed automatically once a
-day (cached on-device, so Claude is only called once daily unless you
-tap the manual refresh button) — and the same line appears on a full-
-screen splash that shows briefly while the app launches, before the rest
-of the UI is ready. This is deliberately *not* a quote attributed to
-David Goggins, Kobe Bryant, or any other real person — the backend's
-system prompt (`backend/src/routes/chat.ts`) explicitly instructs Claude
-to write an original line in that spirit rather than fabricate and
-misattribute a quote to somebody real.
+- **Motivation** (first tab): one short, original Claude-written line in
+  an intense, no-excuses training mindset — refreshed automatically once
+  a day (cached on-device, so Claude is only called once daily unless
+  you tap the manual refresh button) — and the same line appears on a
+  full-screen splash that shows briefly while the app launches, before
+  the rest of the UI is ready. This is deliberately *not* a quote
+  attributed to David Goggins, Kobe Bryant, or any other real person —
+  the backend's system prompt (`backend/src/routes/chat.ts`) explicitly
+  instructs Claude to write an original line in that spirit rather than
+  fabricate and misattribute a quote to somebody real.
+- **Stats**: a training load / trends dashboard — weekly volume
+  (distance/time/elevation), a By Sport section with weekly/monthly/
+  yearly totals for Run, Bike, Swim, and Weight Training (mileage and
+  elevation gain for the first three; duration and session count for
+  Weight Training, since Strava reports no distance for it), a 7-day vs
+  28-day acute:chronic load trend, and a recent activities list.
+  Distances are shown in miles, elevation gain in feet. Also shows:
+  average/weighted watts and kilojoules on activities that have them; a
+  monthly aerobic-efficiency trend per sport (real power-per-heartbeat
+  for rides with a power meter, speed-per-heartbeat otherwise) once
+  there's a few months of data; and a Recent PRs list of any run effort
+  Strava currently ranks in your all-time top 3, found among your most
+  recently synced runs. A "Longest Efforts" row opens a separate page
+  ranking your top 10 longest runs, top 10 longest rides, and top 10
+  longest swims across your entire Strava history (not just the
+  ~370-day window everything else on the dashboard uses — Weight
+  Training isn't ranked there, since it has no distance to rank by). A
+  "Compare" row opens a page for creating or joining a small invite-code
+  group with other Go Harder Ai Training users, to see everyone's
+  current-month relative effort, hours, and mileage side by side — see
+  *Compare groups* below for why this isn't a general Strava
+  leaderboard. Three more connections, all optional, live behind this
+  tab's `•••` menu: Apple Health (sleep, resting heart rate, HRV, shown
+  in a Recovery section and fed into the coach's context), Google
+  Calendar (scheduled workouts are pushed there as real events, and
+  Claude reads your upcoming events back so it can avoid double-booking
+  you), and Intervals.icu (a self-serve API key, no OAuth — pulls in its
+  own CTL/ATL/form fitness-and-fatigue numbers, and pushes scheduled
+  workouts there too).
+- **Steps**: daily step count and walking/running distance from Apple
+  Health (same HealthKit permission sheet as the Recovery section
+  above), rolled up into this week/this month/this year totals plus a
+  rolling 365-day daily average — a stable "typical day" number that
+  doesn't swing early in January the way a year-to-date average would —
+  and a 30-day step chart. Folded into the coach's context alongside the
+  other Health data.
+- **Calendar**: scrolls back through your entire Strava history, month
+  by month, with a dot per day for each sport you did that day — tap a
+  day to see its activities. Can hand you a subscribable `.ics` feed URL
+  (share-icon button) for any calendar app. If you've set up the
+  backend's optional Strava webhook subscription, the app also does a
+  cheap foreground check here and only does a full resync when
+  something's actually new.
+- **Coach**: a chat with Claude, grounded in the same training, Health,
+  and steps data shown elsewhere in the app, for reviewing workouts and
+  trends. Claude can also schedule, move, or cancel future workouts,
+  which then show up as hollow calendar markers on the Calendar tab
+  alongside completed activities. Has a free-text goals & preferences
+  box (target-icon button) for anything you want the coach to factor
+  in — races, equipment, recovery tools, blackout days, injuries.
 
 The whole UI uses one small, deliberate palette sampled straight from the
 Go Harder Ai Training logo: a bright lime green (`#A8D80A`) and a
@@ -222,7 +228,7 @@ TrainingMonitor/
                   feed uploads, HealthKit manager, free-text preferences
                   store, group membership store
   ViewModels/      Training-load + efficiency aggregation, calendar month
-                  pagination, coach chat, Health, Google Calendar,
+                  pagination, coach chat, Health, Steps, Google Calendar,
                   Intervals.icu, longest efforts, group compare
   Views/          SwiftUI screens and chart components
 ```

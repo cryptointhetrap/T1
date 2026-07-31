@@ -10,6 +10,7 @@ final class CoachChatViewModel: ObservableObject {
     private let dashboardViewModel: DashboardViewModel
     private let scheduledWorkoutStore: ScheduledWorkoutStore
     private let healthViewModel: HealthViewModel
+    private let stepsViewModel: StepsViewModel
     private let calendarViewModel: GoogleCalendarViewModel
     private let intervalsICUViewModel: IntervalsICUViewModel
     let preferencesStore: PreferencesStore
@@ -18,6 +19,7 @@ final class CoachChatViewModel: ObservableObject {
         dashboardViewModel: DashboardViewModel,
         scheduledWorkoutStore: ScheduledWorkoutStore,
         healthViewModel: HealthViewModel,
+        stepsViewModel: StepsViewModel,
         calendarViewModel: GoogleCalendarViewModel,
         intervalsICUViewModel: IntervalsICUViewModel,
         preferencesStore: PreferencesStore
@@ -25,6 +27,7 @@ final class CoachChatViewModel: ObservableObject {
         self.dashboardViewModel = dashboardViewModel
         self.scheduledWorkoutStore = scheduledWorkoutStore
         self.healthViewModel = healthViewModel
+        self.stepsViewModel = stepsViewModel
         self.calendarViewModel = calendarViewModel
         self.intervalsICUViewModel = intervalsICUViewModel
         self.preferencesStore = preferencesStore
@@ -52,6 +55,7 @@ final class CoachChatViewModel: ObservableObject {
                 dashboardViewModel.trainingSummaryText(),
                 scheduleContextText(),
                 healthViewModel.summaryText(),
+                stepsViewModel.summaryText(),
                 intervalsICUViewModel.summaryText(),
                 calendarViewModel.conflictContextText(),
                 preferencesStore.summaryText(),

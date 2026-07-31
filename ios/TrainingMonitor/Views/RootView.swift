@@ -4,6 +4,7 @@ struct RootView: View {
     @EnvironmentObject private var authManager: StravaAuthManager
     @StateObject private var scheduledWorkoutStore = ScheduledWorkoutStore()
     @StateObject private var healthViewModel = HealthViewModel()
+    @StateObject private var stepsViewModel = StepsViewModel()
     @StateObject private var googleAuthManager = GoogleAuthManager()
     @StateObject private var intervalsICUViewModel = IntervalsICUViewModel()
     @StateObject private var preferencesStore = PreferencesStore()
@@ -32,6 +33,8 @@ struct RootView: View {
                         athleteID: authManager.session?.athleteID
                     )
                     .tabItem { Label("Stats", systemImage: "chart.bar") }
+                    StepsView(viewModel: stepsViewModel)
+                        .tabItem { Label("Steps", systemImage: "figure.walk") }
                     CalendarView(
                         viewModel: CalendarViewModel(apiClient: apiClient),
                         scheduledWorkoutStore: scheduledWorkoutStore,
@@ -43,6 +46,7 @@ struct RootView: View {
                             dashboardViewModel: dashboardViewModel,
                             scheduledWorkoutStore: scheduledWorkoutStore,
                             healthViewModel: healthViewModel,
+                            stepsViewModel: stepsViewModel,
                             calendarViewModel: calendarViewModel,
                             intervalsICUViewModel: intervalsICUViewModel,
                             preferencesStore: preferencesStore

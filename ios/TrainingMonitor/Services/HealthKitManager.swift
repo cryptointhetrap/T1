@@ -2,8 +2,9 @@ import Foundation
 import HealthKit
 
 /// Read-only access to Apple Health recovery metrics (sleep, resting heart
-/// rate, HRV). Purely on-device — HealthKit has no server component and
-/// needs no backend involvement.
+/// rate, HRV) and daily activity (steps, walking + running distance).
+/// Purely on-device — HealthKit has no server component and needs no
+/// backend involvement.
 enum HealthKitManager {
     enum HealthKitError: Error {
         case notAvailable
@@ -16,6 +17,8 @@ enum HealthKitManager {
         if let sleep = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) { types.insert(sleep) }
         if let restingHeartRate = HKObjectType.quantityType(forIdentifier: .restingHeartRate) { types.insert(restingHeartRate) }
         if let hrv = HKObjectType.quantityType(forIdentifier: .heartRateVariabilitySDNN) { types.insert(hrv) }
+        if let steps = HKObjectType.quantityType(forIdentifier: .stepCount) { types.insert(steps) }
+        if let distance = HKObjectType.quantityType(forIdentifier: .distanceWalkingRunning) { types.insert(distance) }
         return types
     }
 
@@ -72,5 +75,50 @@ enum HealthKitManager {
         }
 
         return samples.first?.quantity.doubleValue(for: unit)
+    }
+
+    /// Day-bucketed sums of a cumulative quantity type (steps, distance)
+    /// between `start` and `end`, keyed by the start of each day. Uses
+    /// `HKStatisticsCollectionQuery` rather than summing raw samples
+    /// directly — HealthKit dedupes overlapping samples from multiple
+    /// sources (phone + watch, say) when computing the per-day sum, which a
+    /// naive manual sum would double-count.
+    static func fetchDailyQuantityTotals(
+        for identifier: HKQuantityTypeIdentifier,
+        unit: HKUnit,
+        from start: Date,
+        to end: Date
+    ) async throws -> [Date: Double] {
+        guard let quantityType = HKObjectType.quantityType(forIdentifier: identifier) else { return [:] }
+        let calendar = Calendar.current
+        let anchor = calendar.startOfDay(for: start)
+        let predicate = HKQuery.predicateForSamples(withStart: start, end: end, options: .strictStartDate)
+
+        let collection: HKStatisticsCollection = try await withCheckedThrowingContinuation { continuation in
+            let query = HKStatisticsCollectionQuery(
+                quantityType: quantityType,
+                quantitySamplePredicate: predicate,
+                options: .cumulativeSum,
+                anchorDate: anchor,
+                intervalComponents: DateComponents(day: 1)
+            )
+            query.initialResultsHandler = { _, results, error in
+                if let error {
+                    continuation.resume(throwing: error)
+                } else if let results {
+                    continuation.resume(returning: results)
+                } else {
+                    continuation.resume(throwing: HealthKitError.notAvailable)
+                }
+            }
+            store.execute(query)
+        }
+
+        var result: [Date: Double] = [:]
+        collection.enumerateStatistics(from: start, to: end) { stats, _ in
+            guard let sum = stats.sumQuantity() else { return }
+            result[calendar.startOfDay(for: stats.startDate)] = sum.doubleValue(for: unit)
+        }
+        return result
     }
 }

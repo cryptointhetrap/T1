@@ -23,7 +23,7 @@
     <key>LSRequiresIPhoneOS</key>
     <true/>
     <key>NSHealthShareUsageDescription</key>
-    <string>Go Harder Ai Training reads your sleep and heart-rate data from Health to factor recovery into your coaching.</string>
+    <string>Go Harder Ai Training reads your sleep, heart-rate, step count, and walking/running distance from Health to factor recovery and daily activity into your coaching.</string>
     <key>UILaunchScreen</key>
     <dict/>
     <key>UISupportedInterfaceOrientations</key>
