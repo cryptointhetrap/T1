@@ -175,6 +175,16 @@ events it already receives). This is what lets the backend wake the app in
 the background to generate an AI workout review right after a new activity
 syncs, rather than the athlete having to open the app and wait.
 
+**Requires a paid Apple Developer Program membership ($99/year).** Apple's
+free/personal development teams (just an Apple ID, no paid enrollment)
+cannot provision an app with the Push Notifications capability at all —
+Xcode will refuse to build with an error like *"Personal development
+teams... do not support the Push Notifications capability."* That's why
+`TrainingMonitor.entitlements` does **not** declare `aps-environment` by
+default — everything else in this app builds and runs fine on a free
+account; this one feature is opt-in specifically because most people
+cloning this repo won't have a paid membership.
+
 1. In [Apple Developer](https://developer.apple.com/account) → **Certificates,
    Identifiers & Profiles → Keys**, create a new key with the **Apple Push
    Notifications service (APNs)** capability checked. Download the `.p8`
@@ -186,12 +196,14 @@ syncs, rather than the athlete having to open the app and wait.
    file on the server), and `APNS_BUNDLE_ID` (the iOS app's bundle ID,
    e.g. `com.trainingmonitor.app` — must match exactly, it's used as the
    APNs "topic").
-4. On the iOS side, add the **Push Notifications** capability to the
-   Xcode target and enable **Background Modes → Remote notifications**
-   (the checked-in `project.yml`/entitlements already declare these; if
-   you changed the bundle ID you may need to re-add the capability in
-   Xcode so it's provisioned on your Apple Developer account). The athlete
-   then turns workout reviews on from the Stats tab's `•••` menu.
+4. On the iOS side, in Xcode: select the target → **Signing & Capabilities**
+   → **+ Capability** → **Push Notifications** (this only succeeds if your
+   Team is enrolled in the paid Developer Program — it adds the
+   `aps-environment` key to `TrainingMonitor.entitlements` for you) — and
+   separately enable **Background Modes → Remote notifications** if it
+   isn't already checked (`project.yml`/`Info.plist` already declare that
+   one, since Background Modes alone doesn't need a paid account). The
+   athlete then turns workout reviews on from the Stats tab's `•••` menu.
 
 Leaving any of the four `APNS_*` variables unset is completely fine —
 `server.ts` only wires up the APNs client when all four are present, and

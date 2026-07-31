@@ -239,21 +239,26 @@ notification. The review also stays visible afterward as a small
 "✨ ..." line under the matching activity in the Stats tab's recent-
 activities list (`WorkoutReviewStore`, on-device only).
 
-Requires the backend's optional APNs configuration (see
-`backend/README.md` → *Push notifications setup*) — four environment
-variables from an Apple Developer `.p8` auth key. Without that
-configuration the menu toggle still works (permission gets requested,
-the device still registers) but no push ever arrives, since the backend
-has nowhere to send it; everything else in the app is unaffected either
-way. On the Xcode side this needs the **Push Notifications** capability
-and **Background Modes → Remote notifications** enabled — both already
-declared in the checked-in `project.yml`/`Info.plist`/entitlements, so
-this is normally nothing you need to touch unless you changed the bundle
-ID (in which case re-add the capability in Xcode so it provisions under
-your own Apple Developer account). The `aps-environment` entitlement
-ships as `development` (sandbox) — switch it to `production` before
-archiving for TestFlight/App Store, or let Xcode manage it automatically
-with automatic signing.
+**Needs a paid Apple Developer Program membership ($99/year) — skip this
+whole feature if you're on a free/personal team.** Free Apple IDs cannot
+provision an app with the Push Notifications capability at all (Xcode
+will refuse to build with a "Personal development teams... do not
+support the Push Notifications capability" error), so
+`TrainingMonitor.entitlements` deliberately does **not** declare
+`aps-environment` by default — every other feature in this app builds
+and runs fine on a free account. To turn this one on: enroll in the paid
+program, then in Xcode select the target → **Signing & Capabilities** →
+**+ Capability** → **Push Notifications** (this adds the
+`aps-environment` entitlement back for you), and confirm **Background
+Modes → Remote notifications** is checked too (`project.yml`/`Info.plist`
+already declare that half, since Background Modes alone doesn't need a
+paid account). Then set up the backend's four `APNS_*` environment
+variables (see `backend/README.md` → *Push notifications setup*) — the
+menu toggle works without them (permission gets requested, the device
+still registers) but no push ever arrives if the backend has nowhere to
+send it. The `aps-environment` value Xcode adds is `development`
+(sandbox) — switch to `production` before archiving for TestFlight/App
+Store, or let Xcode manage it automatically with automatic signing.
 
 ### Compare groups
 

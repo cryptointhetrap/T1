@@ -4,12 +4,15 @@
 <dict>
     <key>com.apple.developer.healthkit</key>
     <true/>
-    <!-- "development" talks to APNs' sandbox environment (matches Xcode
-         debug builds run from a device); switch to "production" before
-         archiving for TestFlight/App Store, or let Xcode manage this
-         automatically once the Push Notifications capability is enabled
-         with automatic signing. -->
-    <key>aps-environment</key>
-    <string>development</string>
+    <!-- Push Notifications (aps-environment) is deliberately NOT declared
+         here by default — Apple's free/personal development teams cannot
+         provision an app with that capability at all (only paid Apple
+         Developer Program members can), so including it would break a
+         first build for most people cloning this repo. To turn on the
+         optional AI workout-review push feature: in Xcode, Signing &
+         Capabilities → "+ Capability" → Push Notifications (this adds the
+         aps-environment key back automatically) — only works if your
+         Team is enrolled in the paid Developer Program. See
+         backend/README.md → "Push notifications setup". -->
 </dict>
 </plist>
