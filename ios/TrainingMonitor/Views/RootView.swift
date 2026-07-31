@@ -31,7 +31,7 @@ struct RootView: View {
                         apiClient: apiClient,
                         athleteID: authManager.session?.athleteID
                     )
-                    .tabItem { Label("Training", systemImage: "chart.bar") }
+                    .tabItem { Label("Stats", systemImage: "chart.bar") }
                     CalendarView(
                         viewModel: CalendarViewModel(apiClient: apiClient),
                         scheduledWorkoutStore: scheduledWorkoutStore,

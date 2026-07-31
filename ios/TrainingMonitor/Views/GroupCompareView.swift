@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// A separate page (pushed from the Training tab) for comparing this
+/// A separate page (pushed from the Stats tab) for comparing this
 /// month's relative effort, hours, and mileage against specific people —
 /// small invite-code groups, not a public Strava leaderboard. See
 /// `GroupCompareViewModel`'s and `backend/src/routes/groups.ts`'s doc

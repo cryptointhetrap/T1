@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// A dedicated page (pushed from the Training tab) ranking the athlete's
+/// A dedicated page (pushed from the Stats tab) ranking the athlete's
 /// own longest-distance runs and rides across their entire Strava history
 /// — separate from the Dashboard, which only looks back ~370 days.
 struct LongestEffortsView: View {

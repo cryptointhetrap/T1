@@ -51,16 +51,16 @@ app short-lived tokens.
   active; tap a day to see what you did
 - Coach chat: ask Claude about your workouts and training trends — it's
   grounded in the same weekly/monthly/yearly stats and recent activities
-  shown in the Training tab. Claude can also add, move, or cancel
+  shown in the Stats tab. Claude can also add, move, or cancel
   scheduled (future) workouts on your behalf, which then show up as
   hollow markers on the Calendar tab alongside completed activities
 - Apple Health: sleep, resting heart rate, and HRV shown in a Recovery
-  section on the Training tab and folded into the coach's context, so its
+  section on the Stats tab and folded into the coach's context, so its
   advice can account for how well-recovered you are
-- Google Calendar (optional, connect from the Training tab's `•••` menu):
+- Google Calendar (optional, connect from the Stats tab's `•••` menu):
   scheduled workouts are pushed there as real events, and Claude reads
   your upcoming events back so it avoids proposing a time that conflicts
-- Intervals.icu (optional, connect from the Training tab's `•••` menu with
+- Intervals.icu (optional, connect from the Stats tab's `•••` menu with
   a self-serve API key — no OAuth): pulls in intervals.icu's own
   CTL/ATL/form fitness-and-fatigue numbers alongside Apple Health in the
   Recovery section and the coach's context, and pushes scheduled workouts
@@ -68,15 +68,15 @@ app short-lived tokens.
 - Aerobic efficiency trend: a monthly efficiency-factor trend per sport —
   real power-per-heartbeat for rides with a power meter, speed-per-
   heartbeat otherwise — computed from Strava's own activity summaries,
-  shown as a chart on the Training tab and summarized for the coach
+  shown as a chart on the Stats tab and summarized for the coach
 - Power data: average/weighted watts and kilojoules, shown on activities
   that have them and factored into the efficiency trend above
 - Recent PRs: surfaces any run effort Strava currently ranks in your
   all-time top 3 for its distance, among your most recently synced runs
-- Longest Efforts (separate page, linked from the Training tab): your
+- Longest Efforts (separate page, linked from the Stats tab): your
   top 10 longest-distance runs and top 10 longest-distance rides, across
   your entire Strava history
-- Compare (separate page, linked from the Training tab): create or join a
+- Compare (separate page, linked from the Stats tab): create or join a
   small invite-code group with people who also use this app, and see
   everyone's current-month relative effort, hours, and mileage side by
   side. Not a public Strava leaderboard — Strava's API has no athlete

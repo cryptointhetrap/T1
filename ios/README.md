@@ -12,19 +12,19 @@ Claude can also schedule, move, or cancel future workouts there, which
 show up as hollow calendar markers alongside completed activities.
 Distances are shown in miles, elevation gain in feet.
 
-Three more connections, all optional, from the Training tab's `•••` menu:
+Three more connections, all optional, from the Stats tab's `•••` menu:
 Apple Health (sleep, resting heart rate, HRV, shown in a Recovery section
 and fed into the coach's context), Google Calendar (scheduled workouts
 are pushed there as real events, and Claude reads your upcoming events
 back so it can avoid double-booking you), and Intervals.icu (a self-serve
 API key, no OAuth — pulls in its own CTL/ATL/form fitness-and-fatigue
-numbers, and pushes scheduled workouts there too). The Training tab also
+numbers, and pushes scheduled workouts there too). The Stats tab also
 shows: average/weighted watts and kilojoules on activities that have
 them; a monthly aerobic-efficiency trend per sport (real power-per-
 heartbeat for rides with a power meter, speed-per-heartbeat otherwise)
 once there's a few months of data; and a Recent PRs list of any run
 effort Strava currently ranks in your all-time top 3, found among your
-most recently synced runs. A "Longest Efforts" row on the Training tab
+most recently synced runs. A "Longest Efforts" row on the Stats tab
 opens a separate page ranking your top 10 longest runs and top 10 longest
 rides across your entire Strava history (not just the ~370-day window
 everything else on the dashboard uses). A "Compare" row opens a page for
@@ -163,7 +163,7 @@ data unless they've personally authorized your specific app via OAuth —
 so "compare with any Strava user" genuinely isn't buildable, and this is
 the closest legitimate substitute. Each connected athlete's relative
 effort, hours, and mileage for the current calendar month get pushed to
-the group automatically whenever the Training tab refreshes (best-effort,
+the group automatically whenever the Stats tab refreshes (best-effort,
 silent) — see `ViewModels/GroupCompareViewModel.swift` and
 `backend/src/routes/groups.ts`.
 
@@ -186,7 +186,7 @@ app's foreground check (`DashboardViewModel.refreshIfNewActivity`,
 triggered from `DashboardView`'s `scenePhase` change) starts finding real
 events instead of always getting `latestEventAt: null`. Skipping the
 backend setup is harmless; the app just falls back to its normal refresh
-triggers (pull-to-refresh, opening the Training tab).
+triggers (pull-to-refresh, opening the Stats tab).
 
 ## How auth works
 

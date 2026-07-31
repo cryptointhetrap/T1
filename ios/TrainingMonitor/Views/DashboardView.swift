@@ -94,7 +94,7 @@ struct DashboardView: View {
                 }
                 .padding()
             }
-            .navigationTitle("Training")
+            .navigationTitle("Stats")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Menu {
