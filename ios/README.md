@@ -40,6 +40,17 @@ button) for any calendar app. If you've set up the backend's optional
 Strava webhook subscription, the app also does a cheap foreground check
 and only does a full resync when something's actually new.
 
+A 5th tab, Motivation, shows one short, original Claude-written line in
+an intense, no-excuses training mindset — refreshed automatically once a
+day (cached on-device, so Claude is only called once daily unless you
+tap the manual refresh button) — and the same line appears on a full-
+screen splash that shows briefly while the app launches, before the rest
+of the UI is ready. This is deliberately *not* a quote attributed to
+David Goggins, Kobe Bryant, or any other real person — the backend's
+system prompt (`backend/src/routes/chat.ts`) explicitly instructs Claude
+to write an original line in that spirit rather than fabricate and
+misattribute a quote to somebody real.
+
 The whole UI uses one small, deliberate palette: the Maryland state
 flag's gold, red, and black (`Views/Theme.swift`), in place of the
 assorted orange/blue/purple/green/yellow this app used earlier. Strava's

@@ -93,6 +93,12 @@ app short-lived tokens.
   `backend/README.md`): the app checks a cheap status endpoint on
   foreground and only does a full resync when something's actually
   changed, instead of always re-fetching your whole activity list
+- Motivation: a 5th tab plus a launch splash screen showing one short,
+  original Claude-written line in an intense, no-excuses training
+  mindset — refreshed once a day automatically, or on demand from the
+  tab. Deliberately not a quote attributed to David Goggins, Kobe
+  Bryant, or anyone real; it's an original line in that spirit, not
+  something put in either of their mouths
 
 ## What's next
 

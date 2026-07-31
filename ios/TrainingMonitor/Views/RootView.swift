@@ -7,6 +7,8 @@ struct RootView: View {
     @StateObject private var googleAuthManager = GoogleAuthManager()
     @StateObject private var intervalsICUViewModel = IntervalsICUViewModel()
     @StateObject private var preferencesStore = PreferencesStore()
+    @StateObject private var motivationViewModel = MotivationViewModel()
+    @State private var showLaunchSplash = true
 
     private let calendarFeedClient = CalendarFeedClient(token: FeedTokenStore.token())
 
@@ -45,6 +47,8 @@ struct RootView: View {
                         )
                     )
                     .tabItem { Label("Coach", systemImage: "bubble.left.and.bubble.right") }
+                    MotivationView(viewModel: motivationViewModel)
+                        .tabItem { Label("Motivation", systemImage: "flame") }
                 }
                 .onAppear {
                     scheduledWorkoutStore.googleCalendarClient = googleCalendarAPIClient
@@ -56,6 +60,13 @@ struct RootView: View {
                 }
             } else {
                 ConnectStravaView()
+            }
+        }
+        .overlay {
+            if showLaunchSplash {
+                MotivationSplashView(viewModel: motivationViewModel) {
+                    withAnimation { showLaunchSplash = false }
+                }
             }
         }
     }

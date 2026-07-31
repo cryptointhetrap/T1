@@ -17,6 +17,12 @@ and the **Anthropic API key** out of the iOS app.
   Calendar events, and the athlete's own typed-in goals/preferences) into
   the `context` string on every request, and Claude's proposed changes
   travel back the same way.
+- `POST /chat/motivation` — asks Claude for one short, original line in an
+  intense, no-excuses training mindset — deliberately *not* a quote
+  attributed to David Goggins, Kobe Bryant, or anyone else real; the
+  system prompt explicitly forbids misattributing invented lines to a
+  named person. The app caches the result locally and only calls this
+  once per calendar day (plus on-demand refresh from the Motivation tab).
 - `PUT /feed/:token` / `GET /feed/:token.ics` — the one piece of state
   this backend holds. The app uploads its scheduled workouts (as plain
   JSON) to a random per-install token it generates itself; the `.ics`

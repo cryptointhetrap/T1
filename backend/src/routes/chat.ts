@@ -86,6 +86,12 @@ interface CoachResponseBody {
   actions: ScheduledWorkoutAction[];
 }
 
+const MOTIVATION_SYSTEM_PROMPT = `Write one short, original motivational line for an athlete about to train (running or cycling). Channel the mental-toughness, no-excuses, embrace-the-suck spirit of ultra-endurance and elite-competitor culture — callousing the mind, discipline over motivation, doing the work when it's hard, outworking doubt.
+
+This must be an ORIGINAL line you write yourself, 1-2 sentences, under 240 characters. Do NOT attribute it to David Goggins, Kobe Bryant, or any other real named person, and do not present it as a quote from anyone — it's your own line, not theirs. No quotation marks, no attribution, no preamble or title. Output only the line itself.`;
+
+const FALLBACK_QUOTE = "Show up. Do the work. That's the whole plan.";
+
 export function createChatRouter(apiKey: string): Router {
   const router = Router();
   const client = new Anthropic({ apiKey });
@@ -135,6 +141,37 @@ export function createChatRouter(apiKey: string): Router {
         content: parsed.reply ?? "",
         actions: Array.isArray(parsed.actions) ? parsed.actions : [],
       });
+    } catch (err) {
+      if (err instanceof Anthropic.APIError) {
+        res.status(err.status ?? 502).json({ error: err.message });
+        return;
+      }
+      res.status(502).json({ error: "Unexpected error contacting Claude" });
+    }
+  });
+
+  router.post("/motivation", async (_req, res) => {
+    try {
+      const response = await client.messages.create({
+        model: MODEL,
+        max_tokens: 150,
+        // A one-line creative burst doesn't need reasoning — keep it cheap and fast.
+        thinking: { type: "disabled" },
+        output_config: { effort: "low" },
+        system: MOTIVATION_SYSTEM_PROMPT,
+        messages: [{ role: "user", content: "Give me today's line." }],
+      });
+
+      if (response.stop_reason === "refusal") {
+        res.json({ quote: FALLBACK_QUOTE });
+        return;
+      }
+
+      const textBlock = response.content.find(
+        (block): block is Anthropic.TextBlock => block.type === "text",
+      );
+      const quote = (textBlock?.text ?? "").trim();
+      res.json({ quote: quote.length > 0 ? quote : FALLBACK_QUOTE });
     } catch (err) {
       if (err instanceof Anthropic.APIError) {
         res.status(err.status ?? 502).json({ error: err.message });
