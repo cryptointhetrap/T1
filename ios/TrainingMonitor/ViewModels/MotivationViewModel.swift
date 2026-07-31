@@ -1,10 +1,9 @@
 import Combine
 import Foundation
 
-/// Backs both the Motivation tab and the launch splash (`RootView`) — a
-/// single shared instance so the same line shows in both places and
-/// Claude is only called once per calendar day per device, not once per
-/// screen.
+/// Backs the launch splash (`RootView`/`MotivationSplashView`) — not a
+/// tab, just the one-line daily quote shown briefly while the app opens.
+/// Cached so Claude is only called once per calendar day per device.
 @MainActor
 final class MotivationViewModel: ObservableObject {
     @Published private(set) var quote: String?
@@ -31,8 +30,7 @@ final class MotivationViewModel: ObservableObject {
         await refresh()
     }
 
-    /// Always fetches a new line, bypassing the daily cache — used by the
-    /// Motivation tab's manual refresh.
+    /// Always fetches a new line, bypassing the daily cache.
     func refresh() async {
         isLoading = true
         errorMessage = nil

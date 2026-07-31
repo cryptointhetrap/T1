@@ -1,17 +1,7 @@
 # Go Harder Ai Training (iOS)
 
-A SwiftUI app that connects to Strava and Apple Health, across six tabs:
+A SwiftUI app that connects to Strava and Apple Health, across five tabs:
 
-- **Motivation** (first tab): one short, original Claude-written line in
-  an intense, no-excuses training mindset — refreshed automatically once
-  a day (cached on-device, so Claude is only called once daily unless
-  you tap the manual refresh button) — and the same line appears on a
-  full-screen splash that shows briefly while the app launches, before
-  the rest of the UI is ready. This is deliberately *not* a quote
-  attributed to David Goggins, Kobe Bryant, or any other real person —
-  the backend's system prompt (`backend/src/routes/chat.ts`) explicitly
-  instructs Claude to write an original line in that spirit rather than
-  fabricate and misattribute a quote to somebody real.
 - **Stats**: a training load / trends dashboard — weekly volume
   (distance/time/elevation), a By Sport section with weekly/monthly/
   yearly totals for Run, Bike, Swim, and Weight Training (mileage and
@@ -52,10 +42,11 @@ A SwiftUI app that connects to Strava and Apple Health, across six tabs:
 - **Meals**: Claude generates 5 low-carb and 5 high-carb suggestions for
   each of breakfast/lunch/dinner every day (30 total) — real, familiar
   dishes, not invented ones — refreshed automatically once a day (cached
-  on-device like the Motivation tab) or on demand from the refresh
-  button. Thumbs up/down on any suggestion; rated dishes are remembered
-  on-device and sent back as steering context on future requests, so the
-  picks drift toward what you've liked and away from what you haven't —
+  on-device, same pattern as the launch splash's daily line below) or on
+  demand from the refresh button. Thumbs up/down on any suggestion; rated
+  dishes are remembered on-device and sent back as steering context on
+  future requests, so the picks drift toward what you've liked and away
+  from what you haven't —
   no backend state, the same "context, not database" personalization
   approach as the rest of this app. Tap a suggestion for two links: a
   recipe search ("how to make it") and a delivery search ("order it").
@@ -77,6 +68,16 @@ A SwiftUI app that connects to Strava and Apple Health, across six tabs:
   alongside completed activities. Has a free-text goals & preferences
   box (target-icon button) for anything you want the coach to factor
   in — races, equipment, recovery tools, blackout days, injuries.
+
+Not a tab: a full-screen launch splash shows briefly while the app opens,
+with one short, original Claude-written line in an intense, no-excuses
+training mindset — refreshed automatically once a day (cached on-device,
+so Claude is only called once daily) — before handing off to the Stats
+tab. Deliberately *not* a quote attributed to David Goggins, Kobe
+Bryant, or any other real person — the backend's system prompt
+(`backend/src/routes/chat.ts`) explicitly instructs Claude to write an
+original line in that spirit rather than fabricate and misattribute a
+quote to somebody real.
 
 The whole UI uses one small, deliberate palette sampled straight from the
 Go Harder Ai Training logo: a bright lime green (`#A8D80A`) and a
