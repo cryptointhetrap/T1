@@ -44,11 +44,20 @@ if (!ANTHROPIC_API_KEY) {
 
 async function buildPushConfig(): Promise<PushConfig | undefined> {
   if (!APNS_TEAM_ID || !APNS_KEY_ID || !APNS_AUTH_KEY_PATH || !APNS_BUNDLE_ID) return undefined;
-  const privateKey = await readFile(APNS_AUTH_KEY_PATH, "utf8");
-  return {
-    store: createPushStore(PUSH_DATA_DIR),
-    apns: createAPNsClient({ teamID: APNS_TEAM_ID, keyID: APNS_KEY_ID, privateKey, bundleID: APNS_BUNDLE_ID }),
-  };
+
+  // A missing/unreadable key file (e.g. leftover placeholder text in
+  // .env) should disable this optional feature, not take down the whole
+  // server — every other route works fine without it.
+  try {
+    const privateKey = await readFile(APNS_AUTH_KEY_PATH, "utf8");
+    return {
+      store: createPushStore(PUSH_DATA_DIR),
+      apns: createAPNsClient({ teamID: APNS_TEAM_ID, keyID: APNS_KEY_ID, privateKey, bundleID: APNS_BUNDLE_ID }),
+    };
+  } catch (err) {
+    console.warn(`Push notifications disabled: couldn't read APNS_AUTH_KEY_PATH (${APNS_AUTH_KEY_PATH}): ${(err as Error).message}`);
+    return undefined;
+  }
 }
 
 const app = express();
