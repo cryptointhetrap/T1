@@ -32,7 +32,7 @@ avoid proposing a time that overlaps one — if every reasonable slot that
 day conflicts, say so in "reply" and ask the athlete to pick, rather than
 silently double-booking them:
 - "add": schedule a new workout. Provide "date" (YYYY-MM-DD), "sport"
-  (e.g. "Run", "Ride", "Rest", "Strength"), "title", and optionally
+  (e.g. "Run", "Ride", "Swim", "Weight Training", "Rest"), "title", and optionally
   "time" (24-hour HH:mm; default to a sensible time like "07:00" if the
   athlete doesn't care) and "notes". Do not include "id" — one will be
   assigned.

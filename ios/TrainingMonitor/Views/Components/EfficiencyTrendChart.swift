@@ -26,6 +26,7 @@ struct EfficiencyTrendChart: View {
         .chartForegroundStyleScale([
             SportCategory.run.rawValue: Color.ghGreen,
             SportCategory.ride.rawValue: Color.ghSilver,
+            SportCategory.swim.rawValue: Color.primary,
         ])
         .chartLegend(position: .bottom)
         .chartYAxis(.hidden)

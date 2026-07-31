@@ -5,6 +5,7 @@ import Foundation
 final class LongestEffortsViewModel: ObservableObject {
     @Published private(set) var topRuns: [StravaActivity] = []
     @Published private(set) var topRides: [StravaActivity] = []
+    @Published private(set) var topSwims: [StravaActivity] = []
     @Published private(set) var isLoading = false
     @Published var errorMessage: String?
 
@@ -21,7 +22,7 @@ final class LongestEffortsViewModel: ObservableObject {
     /// paginating through a lot of activities. Pull-to-refresh forces a
     /// re-fetch if new activities should be considered.
     func loadIfNeeded() async {
-        guard topRuns.isEmpty && topRides.isEmpty else { return }
+        guard topRuns.isEmpty && topRides.isEmpty && topSwims.isEmpty else { return }
         await load()
     }
 
@@ -35,6 +36,7 @@ final class LongestEffortsViewModel: ObservableObject {
             let activities = try await apiClient.fetchActivities(after: allTime)
             topRuns = Self.longest(activities, matching: .run, count: topCount)
             topRides = Self.longest(activities, matching: .ride, count: topCount)
+            topSwims = Self.longest(activities, matching: .swim, count: topCount)
         } catch {
             errorMessage = "Couldn't load your full activity history: \(error.localizedDescription)"
         }

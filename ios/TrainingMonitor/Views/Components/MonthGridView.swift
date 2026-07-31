@@ -5,18 +5,23 @@ extension SportCategory {
         switch self {
         case .run: return .ghGreen
         case .ride: return .ghSilver
+        case .swim: return .primary
+        case .weightTraining: return .secondary
         }
     }
 }
 
 extension ScheduledWorkout {
     /// Reuses the completed-activity colors where the sport name overlaps
-    /// (run/ride). Anything else (rest days, strength, etc.) uses `.primary`
-    /// rather than literal black — black-on-black would vanish in dark mode.
+    /// (run/ride/swim/weight training). Anything else (rest days, etc.)
+    /// uses `.primary` rather than literal black — black-on-black would
+    /// vanish in dark mode.
     var dotColor: Color {
         let lowercased = sport.lowercased()
         if lowercased.contains("run") { return .ghGreen }
         if lowercased.contains("ride") || lowercased.contains("bike") || lowercased.contains("cycl") { return .ghSilver }
+        if lowercased.contains("swim") { return .primary }
+        if lowercased.contains("weight") || lowercased.contains("strength") || lowercased.contains("lift") { return .secondary }
         return .primary
     }
 }

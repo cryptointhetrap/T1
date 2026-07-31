@@ -1,9 +1,12 @@
 # Go Harder Ai Training (iOS)
 
 A SwiftUI app that connects to Strava and shows a training load / trends
-dashboard: weekly volume (distance/time/elevation), a Bike & Run section
-with weekly/monthly/yearly mileage and elevation gain per sport, a 7-day
-vs 28-day acute:chronic load trend, and a recent activities list. A second
+dashboard: weekly volume (distance/time/elevation), a By Sport section
+with weekly/monthly/yearly totals for Run, Bike, Swim, and Weight
+Training (mileage and elevation gain for the first three; duration and
+session count for Weight Training, since Strava reports no distance for
+it), a 7-day vs 28-day acute:chronic load trend, and a recent activities
+list. A second
 tab is an activity calendar that scrolls back through your entire Strava
 history, month by month, with a dot per day for each sport you did that
 day — tap a day to see its activities. A third tab is a chat with Claude,
@@ -25,9 +28,11 @@ heartbeat for rides with a power meter, speed-per-heartbeat otherwise)
 once there's a few months of data; and a Recent PRs list of any run
 effort Strava currently ranks in your all-time top 3, found among your
 most recently synced runs. A "Longest Efforts" row on the Stats tab
-opens a separate page ranking your top 10 longest runs and top 10 longest
-rides across your entire Strava history (not just the ~370-day window
-everything else on the dashboard uses). A "Compare" row opens a page for
+opens a separate page ranking your top 10 longest runs, top 10 longest
+rides, and top 10 longest swims across your entire Strava history (not
+just the ~370-day window everything else on the dashboard uses —
+Weight Training isn't ranked there, since it has no distance to rank
+by). A "Compare" row opens a page for
 creating or joining a small invite-code group with other Go Harder Ai
 Training
 users, to see everyone's current-month relative effort, hours, and
@@ -224,7 +229,7 @@ TrainingMonitor/
 
 ## Roadmap ideas (not yet built)
 
-- Per-sport filtering (run/ride/swim) on the dashboard
+- Per-sport filtering (run/ride/swim/weight training) on the dashboard
 - Push notifications for weekly summaries
 - Goal setting (weekly distance/time targets) with progress rings
 - Widgets / Live Activities for an in-progress activity

@@ -1,7 +1,9 @@
 import SwiftUI
 
-/// Shows mileage and elevation gain for one sport (run or bike) across the
-/// current calendar week, month, and year.
+/// Shows weekly/monthly/yearly totals for one sport. Run, Bike, and Swim
+/// show mileage and elevation gain; Weight Training shows duration and
+/// session count instead, since Strava never reports a distance for it —
+/// see `SportCategory.tracksDistance`.
 struct SportSummaryCard: View {
     let category: SportCategory
     let totals: SportTotals
@@ -31,11 +33,19 @@ struct SportSummaryCard: View {
                 .foregroundStyle(.secondary)
             Spacer()
             VStack(alignment: .trailing, spacing: 2) {
-                Text(Units.formattedMiles(totals.distanceMeters))
-                    .font(.subheadline.bold())
-                Text("\(Units.formattedFeet(totals.elevationGainMeters)) gain")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                if category.tracksDistance {
+                    Text(Units.formattedMiles(totals.distanceMeters))
+                        .font(.subheadline.bold())
+                    Text("\(Units.formattedFeet(totals.elevationGainMeters)) gain")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text(String(format: "%.1f h", totals.movingTimeHours))
+                        .font(.subheadline.bold())
+                    Text("\(totals.activityCount) sessions")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
         }
     }

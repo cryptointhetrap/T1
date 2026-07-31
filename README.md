@@ -41,8 +41,10 @@ app short-lived tokens.
 - Connect/disconnect your Strava account (OAuth via
   `ASWebAuthenticationSession`, tokens kept in the iOS Keychain)
 - Weekly training volume chart (distance/time/elevation)
-- Bike & Run section: weekly, monthly, and yearly mileage and elevation
-  gain, broken out per sport (miles/feet)
+- By Sport section: weekly, monthly, and yearly totals broken out per
+  sport — mileage and elevation gain (miles/feet) for Run, Bike, and
+  Swim; duration and session count for Weight Training, since Strava
+  doesn't report a distance for it
 - Training load trend: 7-day (acute) vs 28-day (chronic) rolling load, with
   a simple status readout (ramping up / optimal / high load / detraining)
 - Recent activities list
@@ -74,8 +76,9 @@ app short-lived tokens.
 - Recent PRs: surfaces any run effort Strava currently ranks in your
   all-time top 3 for its distance, among your most recently synced runs
 - Longest Efforts (separate page, linked from the Stats tab): your
-  top 10 longest-distance runs and top 10 longest-distance rides, across
-  your entire Strava history
+  top 10 longest-distance runs, rides, and swims, across your entire
+  Strava history (Weight Training isn't ranked here — no distance to
+  rank by)
 - Compare (separate page, linked from the Stats tab): create or join a
   small invite-code group with people who also use this app, and see
   everyone's current-month relative effort, hours, and mileage side by
@@ -105,7 +108,6 @@ app short-lived tokens.
 This is intentionally a thin first slice. Natural next additions, roughly
 in order of how self-contained they are:
 
-- Swim/other sports in the per-sport breakdown
 - Weekly goal setting + progress rings
 - Push notifications (e.g. a weekly recap, or an overload warning)
 - Home screen widgets / Live Activities

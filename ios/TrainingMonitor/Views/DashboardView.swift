@@ -41,7 +41,7 @@ struct DashboardView: View {
 
                     statGrid
 
-                    section(title: "Bike & Run") {
+                    section(title: "By Sport") {
                         VStack(spacing: 12) {
                             ForEach(SportCategory.allCases) { category in
                                 if let totals = viewModel.sportTotals[category] {

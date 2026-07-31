@@ -27,18 +27,31 @@ enum TrainingStatus: String {
 enum SportCategory: String, CaseIterable, Identifiable {
     case run = "Run"
     case ride = "Bike"
+    case swim = "Swim"
+    case weightTraining = "Weight Training"
     var id: String { rawValue }
 
     var systemImage: String {
         switch self {
         case .run: return "figure.run"
         case .ride: return "figure.outdoor.cycle"
+        case .swim: return "figure.pool.swim"
+        case .weightTraining: return "dumbbell.fill"
         }
+    }
+
+    /// Run/ride/swim have a meaningful Strava distance; weight training
+    /// doesn't (Strava always reports 0m), so its summary shows duration
+    /// and session count instead — see `SportSummaryCard`.
+    var tracksDistance: Bool {
+        self != .weightTraining
     }
 
     static func matching(_ activity: StravaActivity) -> SportCategory? {
         if activity.type.contains("Run") { return .run }
         if activity.type.contains("Ride") { return .ride }
+        if activity.type.contains("Swim") { return .swim }
+        if activity.type.contains("WeightTraining") { return .weightTraining }
         return nil
     }
 }
@@ -61,6 +74,7 @@ struct EfficiencyPoint: Identifiable {
 struct PeriodTotals {
     let distanceMeters: Double
     let elevationGainMeters: Double
+    let movingTimeHours: Double
     let activityCount: Int
 }
 
@@ -202,6 +216,7 @@ final class DashboardViewModel: ObservableObject {
                 weeklyAverageForYear: PeriodTotals(
                     distanceMeters: yearly.distanceMeters / weeksElapsedInYear,
                     elevationGainMeters: yearly.elevationGainMeters / weeksElapsedInYear,
+                    movingTimeHours: yearly.movingTimeHours / weeksElapsedInYear,
                     activityCount: Int((Double(yearly.activityCount) / weeksElapsedInYear).rounded())
                 )
             )
@@ -230,6 +245,7 @@ final class DashboardViewModel: ObservableObject {
         return PeriodTotals(
             distanceMeters: matched.reduce(0) { $0 + $1.distance },
             elevationGainMeters: matched.reduce(0) { $0 + $1.totalElevationGain },
+            movingTimeHours: Double(matched.reduce(0) { $0 + $1.movingTime }) / 3600,
             activityCount: matched.count
         )
     }
@@ -401,11 +417,20 @@ final class DashboardViewModel: ObservableObject {
 
         for category in SportCategory.allCases {
             guard let totals = sportTotals[category] else { continue }
-            lines.append(
-                "\(category.rawValue) — week: \(Units.formattedMiles(totals.weekly.distanceMeters)); " +
-                "month: \(Units.formattedMiles(totals.monthly.distanceMeters)); " +
-                "year: \(Units.formattedMiles(totals.yearly.distanceMeters)), \(Units.formattedFeet(totals.yearly.elevationGainMeters)) gain"
-            )
+            if category.tracksDistance {
+                lines.append(
+                    "\(category.rawValue) — week: \(Units.formattedMiles(totals.weekly.distanceMeters)); " +
+                    "month: \(Units.formattedMiles(totals.monthly.distanceMeters)); " +
+                    "year: \(Units.formattedMiles(totals.yearly.distanceMeters)), \(Units.formattedFeet(totals.yearly.elevationGainMeters)) gain"
+                )
+            } else {
+                lines.append(
+                    "\(category.rawValue) — week: \(String(format: "%.1f", totals.weekly.movingTimeHours)) h, " +
+                    "\(totals.weekly.activityCount) sessions; month: \(String(format: "%.1f", totals.monthly.movingTimeHours)) h, " +
+                    "\(totals.monthly.activityCount) sessions; year: \(String(format: "%.1f", totals.yearly.movingTimeHours)) h, " +
+                    "\(totals.yearly.activityCount) sessions"
+                )
+            }
         }
 
         if !recentActivities.isEmpty {

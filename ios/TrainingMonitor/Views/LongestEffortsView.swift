@@ -1,8 +1,10 @@
 import SwiftUI
 
 /// A dedicated page (pushed from the Stats tab) ranking the athlete's
-/// own longest-distance runs and rides across their entire Strava history
-/// — separate from the Dashboard, which only looks back ~370 days.
+/// own longest-distance runs, rides, and swims across their entire Strava
+/// history — separate from the Dashboard, which only looks back ~370 days.
+/// Weight training has no meaningful Strava distance, so it isn't ranked
+/// here — see `SportCategory.tracksDistance`.
 struct LongestEffortsView: View {
     @StateObject private var viewModel: LongestEffortsViewModel
 
@@ -33,13 +35,24 @@ struct LongestEffortsView: View {
                     }
                 }
             }
+
+            Section("Longest Swims") {
+                if viewModel.topSwims.isEmpty {
+                    Text("No swims found yet.")
+                        .foregroundStyle(.secondary)
+                } else {
+                    ForEach(Array(viewModel.topSwims.enumerated()), id: \.element.id) { index, activity in
+                        LongestEffortRow(rank: index + 1, activity: activity)
+                    }
+                }
+            }
         }
         .navigationTitle("Longest Efforts")
         .navigationBarTitleDisplayMode(.inline)
         .task { await viewModel.loadIfNeeded() }
         .refreshable { await viewModel.load() }
         .overlay {
-            if viewModel.isLoading && viewModel.topRuns.isEmpty && viewModel.topRides.isEmpty {
+            if viewModel.isLoading && viewModel.topRuns.isEmpty && viewModel.topRides.isEmpty && viewModel.topSwims.isEmpty {
                 ProgressView("Loading your full history…")
             }
         }
