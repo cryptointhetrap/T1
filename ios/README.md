@@ -1,6 +1,9 @@
 # Go Harder Ai Training (iOS)
 
-A SwiftUI app that connects to Strava and Apple Health, across five tabs:
+A SwiftUI app that connects to Strava and Apple Health, across five tabs.
+No Strava account? The first-launch screen also offers "Use Apple Health
+Workouts Instead" — see *Apple Health Workouts* below for exactly what
+that does and doesn't include.
 
 - **Stats**: a training load / trends dashboard — weekly volume
   (distance/time/elevation), a By Sport section with weekly/monthly/
@@ -168,6 +171,39 @@ backend — it's entirely client-side:
    use; click through it (Google restricts this to a testers list you
    control until then).
 
+### Apple Health Workouts (instead of Strava)
+
+No account or console setup — tap "Use Apple Health Workouts Instead" on
+the first-launch screen (`ConnectStravaView`) instead of connecting
+Strava, grant the HealthKit permission sheet, and the same Stats/Calendar
+tabs come from your logged workouts (`HKWorkout`) instead. Architecturally
+this is a second `ActivityProvider` (`HealthKitActivityProvider`,
+alongside `StravaAPIClient`) that both `DashboardViewModel` and
+`CalendarViewModel` are written against, so weekly volume, By Sport
+totals, the training load trend, and the calendar all work identically
+either way — `HealthKitManager.activityTypeName` maps `HKWorkoutActivityType`
+onto the same Run/Ride/Swim/WeightTraining vocabulary `SportCategory`
+already looks for. Since a workout has no athlete-given title the way a
+Strava activity does, names are synthesized the same way Apple's own
+Fitness app does for one ("Morning Run", "Evening Ride").
+
+What's genuinely different, because HealthKit simply doesn't have the
+underlying data: no average heart rate is read per-workout (querying it
+for a whole year of history is expensive, and none of the shared
+dashboard math requires it — training load falls back to
+moving-time-based load like any Strava activity missing Relative Effort),
+so the aerobic efficiency trend and power/watts never populate — those
+sections just don't render, same as a Strava athlete with no power meter.
+Recent PRs, Longest Efforts, and Compare are Strava-only outright (all
+three need Strava's own PR ranking or full activity-history API) and
+their rows/sections are hidden rather than approximated. Workout-review
+push notifications are also Strava-only, since they're triggered by
+Strava's webhook specifically — the "Enable Workout Reviews" menu item
+doesn't appear in this mode. Everything else in the app — Steps, Meals,
+Coach, Google Calendar, Intervals.icu, the `.ics` feed — is unaffected,
+since none of it depends on Strava. Switch back to Strava (or just stop
+using Apple Health Workouts) any time from the Stats tab's `•••` menu.
+
 ### Apple Health
 
 No account or console setup — HealthKit permission is a plain system
@@ -259,6 +295,10 @@ triggers (pull-to-refresh, opening the Stats tab).
 
 ## How auth works
 
+This is the Strava path specifically — choosing "Use Apple Health
+Workouts Instead" skips all of it and goes straight to a HealthKit
+permission sheet (see *Apple Health Workouts (instead of Strava)* above).
+
 1. User taps **Connect with Strava** → app opens Strava's OAuth screen via
    `ASWebAuthenticationSession`.
 2. Strava redirects to `trainingmonitor://oauth-callback?code=...`.
@@ -276,11 +316,14 @@ TrainingMonitor/
   App/            App entry point (@main), UIApplicationDelegateAdaptor
                   shim for APNs callbacks
   Config/         Client ID / backend URL constants
-  Models/         Codable Strava/Google API models, unit conversions
+  Models/         Codable Strava/Google API models, unit conversions,
+                  activity-source choice (Strava vs. Apple Health Workouts)
   Services/       Keychain, Strava + Google + Intervals.icu + Groups +
                   Meals clients, backend client, webhook status polling,
                   coach chat client, local scheduled-workout store +
-                  calendar feed uploads, HealthKit manager, free-text
+                  calendar feed uploads, HealthKit manager (recovery data
+                  + workouts), the shared ActivityProvider abstraction +
+                  its Apple Health Workouts implementation, free-text
                   preferences store, group membership store, meal ratings
                   store, weekly goals store, push-notification manager +
                   device-token registration + AI workout-review generator

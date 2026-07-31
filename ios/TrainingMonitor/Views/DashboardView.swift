@@ -8,7 +8,11 @@ struct DashboardView: View {
     @ObservedObject private var goalsStore: GoalsStore
     @ObservedObject private var pushManager: PushNotificationManager
     @StateObject private var groupCompareViewModel: GroupCompareViewModel
-    let apiClient: StravaAPIClient
+    /// `nil` when backed by Apple Health Workouts instead of Strava (see
+    /// `ActivitySourceStore`) — only needed for the Longest Efforts page.
+    let apiClient: StravaAPIClient?
+    let activitySource: ActivitySource
+    var onDisconnectAppleHealth: (() -> Void)?
     @EnvironmentObject private var authManager: StravaAuthManager
     @Environment(\.scenePhase) private var scenePhase
     @State private var showIntervalsSettings = false
@@ -21,7 +25,9 @@ struct DashboardView: View {
         intervalsICUViewModel: IntervalsICUViewModel,
         goalsStore: GoalsStore,
         pushManager: PushNotificationManager,
-        apiClient: StravaAPIClient,
+        apiClient: StravaAPIClient?,
+        activitySource: ActivitySource,
+        onDisconnectAppleHealth: (() -> Void)? = nil,
         athleteID: Int?
     ) {
         _viewModel = StateObject(wrappedValue: viewModel)
@@ -31,6 +37,8 @@ struct DashboardView: View {
         self.goalsStore = goalsStore
         self.pushManager = pushManager
         self.apiClient = apiClient
+        self.activitySource = activitySource
+        self.onDisconnectAppleHealth = onDisconnectAppleHealth
         _groupCompareViewModel = StateObject(wrappedValue: GroupCompareViewModel(athleteID: athleteID))
     }
 
@@ -82,16 +90,18 @@ struct DashboardView: View {
                         }
                     }
 
-                    NavigationLink {
-                        LongestEffortsView(apiClient: apiClient)
-                    } label: {
-                        recordsRowLabel(title: "Longest Efforts", systemImage: "ruler")
-                    }
+                    if activitySource == .strava, let apiClient {
+                        NavigationLink {
+                            LongestEffortsView(apiClient: apiClient)
+                        } label: {
+                            recordsRowLabel(title: "Longest Efforts", systemImage: "ruler")
+                        }
 
-                    NavigationLink {
-                        GroupCompareView(viewModel: groupCompareViewModel)
-                    } label: {
-                        recordsRowLabel(title: "Compare", systemImage: "person.2")
+                        NavigationLink {
+                            GroupCompareView(viewModel: groupCompareViewModel)
+                        } label: {
+                            recordsRowLabel(title: "Compare", systemImage: "person.2")
+                        }
                     }
 
                     section(title: "Recent activities") {
@@ -132,17 +142,26 @@ struct DashboardView: View {
                                 showIntervalsSettings = true
                             }
                         }
-                        if pushManager.isEnabled {
-                            Button("Disable Workout Reviews", role: .destructive) {
-                                pushManager.disable()
-                            }
-                        } else {
-                            Button("Enable Workout Reviews") {
-                                Task { await pushManager.enable() }
+                        if activitySource == .strava {
+                            if pushManager.isEnabled {
+                                Button("Disable Workout Reviews", role: .destructive) {
+                                    pushManager.disable()
+                                }
+                            } else {
+                                Button("Enable Workout Reviews") {
+                                    Task { await pushManager.enable() }
+                                }
                             }
                         }
-                        Button("Disconnect Strava", role: .destructive) {
-                            authManager.disconnect()
+                        switch activitySource {
+                        case .strava:
+                            Button("Disconnect Strava", role: .destructive) {
+                                authManager.disconnect()
+                            }
+                        case .appleHealth:
+                            Button("Stop Using Apple Health Workouts", role: .destructive) {
+                                onDisconnectAppleHealth?()
+                            }
                         }
                     } label: {
                         Image(systemName: "ellipsis.circle")

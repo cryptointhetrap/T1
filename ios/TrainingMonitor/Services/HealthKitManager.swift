@@ -19,6 +19,7 @@ enum HealthKitManager {
         if let hrv = HKObjectType.quantityType(forIdentifier: .heartRateVariabilitySDNN) { types.insert(hrv) }
         if let steps = HKObjectType.quantityType(forIdentifier: .stepCount) { types.insert(steps) }
         if let distance = HKObjectType.quantityType(forIdentifier: .distanceWalkingRunning) { types.insert(distance) }
+        types.insert(HKObjectType.workoutType())
         return types
     }
 
@@ -120,5 +121,62 @@ enum HealthKitManager {
             result[calendar.startOfDay(for: stats.startDate)] = sum.doubleValue(for: unit)
         }
         return result
+    }
+
+    /// Backs `HealthKitActivityProvider`, the Apple Health Workouts
+    /// alternative to Strava (see `ActivitySourceStore`). Most recent
+    /// first, matching `StravaAPIClient.fetchActivities`.
+    static func fetchWorkouts(after start: Date, before end: Date = Date()) async throws -> [HKWorkout] {
+        let predicate = HKQuery.predicateForSamples(withStart: start, end: end, options: .strictStartDate)
+        let sortDescriptor = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
+
+        return try await withCheckedThrowingContinuation { continuation in
+            let query = HKSampleQuery(sampleType: .workoutType(), predicate: predicate, limit: HKObjectQueryNoLimit, sortDescriptors: [sortDescriptor]) { _, results, error in
+                if let error {
+                    continuation.resume(throwing: error)
+                } else {
+                    continuation.resume(returning: (results as? [HKWorkout]) ?? [])
+                }
+            }
+            store.execute(query)
+        }
+    }
+
+    /// Maps a workout type to the same short vocabulary
+    /// `SportCategory.matching` looks for in `StravaActivity.type`
+    /// ("Run", "Ride", "Swim", "WeightTraining") so By Sport totals and
+    /// training load work identically regardless of activity source.
+    /// Anything outside those four still shows up (weekly volume, recent
+    /// activities), just not broken out by sport.
+    static func activityTypeName(_ type: HKWorkoutActivityType) -> String {
+        switch type {
+        case .running: return "Run"
+        case .cycling: return "Ride"
+        case .swimming: return "Swim"
+        case .traditionalStrengthTraining, .functionalStrengthTraining: return "WeightTraining"
+        case .walking: return "Walk"
+        case .hiking: return "Hike"
+        case .yoga: return "Yoga"
+        case .rowing: return "Row"
+        case .elliptical: return "Elliptical"
+        case .highIntensityIntervalTraining: return "HIIT"
+        default: return "Workout"
+        }
+    }
+
+    /// Apple Health workouts have no athlete-given title the way Strava
+    /// activities do, so this synthesizes one the same way Apple's own
+    /// Fitness app does for an unnamed workout — e.g. "Morning Run".
+    static func displayName(type: String, date: Date) -> String {
+        let hour = Calendar.current.component(.hour, from: date)
+        let timeOfDay: String
+        switch hour {
+        case 5..<12: timeOfDay = "Morning"
+        case 12..<17: timeOfDay = "Afternoon"
+        case 17..<21: timeOfDay = "Evening"
+        default: timeOfDay = "Night"
+        }
+        let label = type == "WeightTraining" ? "Strength Training" : type
+        return "\(timeOfDay) \(label)"
     }
 }

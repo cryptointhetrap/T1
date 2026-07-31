@@ -17,11 +17,11 @@ final class CalendarViewModel: ObservableObject {
     @Published var errorMessage: String?
 
     private var loadedMonths: Set<Date> = []
-    private let apiClient: StravaAPIClient
+    private let activityProvider: ActivityProvider
     private let calendar = Calendar.current
 
-    init(apiClient: StravaAPIClient) {
-        self.apiClient = apiClient
+    init(activityProvider: ActivityProvider) {
+        self.activityProvider = activityProvider
 
         let currentMonthStart = calendar.dateInterval(of: .month, for: Date())?.start ?? Date()
         months = (0..<3).compactMap { offset in
@@ -54,7 +54,7 @@ final class CalendarViewModel: ObservableObject {
         guard let monthEnd = calendar.date(byAdding: .month, value: 1, to: month.monthStart) else { return }
 
         do {
-            let activities = try await apiClient.fetchActivities(after: month.monthStart, before: monthEnd)
+            let activities = try await activityProvider.fetchActivities(after: month.monthStart, before: monthEnd)
             var grouped = activitiesByDay
             for activity in activities {
                 let day = calendar.startOfDay(for: activity.startDateLocal)

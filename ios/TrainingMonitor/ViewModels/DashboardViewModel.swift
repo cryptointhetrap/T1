@@ -109,7 +109,12 @@ final class DashboardViewModel: ObservableObject {
     @Published private(set) var isLoading = false
     @Published var errorMessage: String?
 
-    private let apiClient: StravaAPIClient
+    private let activityProvider: ActivityProvider
+    /// Only set when backed by Strava — PR lookups need Strava's
+    /// per-activity detail endpoint, which Apple Health Workouts has no
+    /// equivalent for (see `ActivitySourceStore`). `nil` just means
+    /// `refreshPersonalRecords` is a no-op and Recent PRs never appears.
+    private let prDetailClient: StravaAPIClient?
     /// Just over a year so calendar year-to-date totals are always complete,
     /// even in early January when "this year" only spans a few days.
     private let lookbackDays = 370
@@ -122,8 +127,9 @@ final class DashboardViewModel: ObservableObject {
     private let personalRecordLookbackCount = 20
     private var fetchedDetailActivityIDs: Set<Int> = []
 
-    init(apiClient: StravaAPIClient) {
-        self.apiClient = apiClient
+    init(activityProvider: ActivityProvider, prDetailClient: StravaAPIClient? = nil) {
+        self.activityProvider = activityProvider
+        self.prDetailClient = prDetailClient
     }
 
     /// Checks the backend's cheap webhook-status endpoint and, only if
@@ -155,7 +161,7 @@ final class DashboardViewModel: ObservableObject {
 
         do {
             let since = Calendar.current.date(byAdding: .day, value: -lookbackDays, to: Date()) ?? Date()
-            let activities = try await apiClient.fetchActivities(after: since)
+            let activities = try await activityProvider.fetchActivities(after: since, before: nil)
             recentActivities = activities.sorted { $0.startDateLocal > $1.startDateLocal }
             weeklySummaries = Self.buildWeeklySummaries(from: activities)
             sportTotals = Self.buildSportTotals(from: activities)
@@ -349,6 +355,8 @@ final class DashboardViewModel: ObservableObject {
     /// there. A PR set further back than that window won't appear here
     /// unless a recent run matched or beat it.
     private func refreshPersonalRecords(from activities: [StravaActivity]) async {
+        guard let prDetailClient else { return }
+
         let candidates = activities
             .filter { SportCategory.matching($0) == .run }
             .sorted { $0.startDateLocal > $1.startDateLocal }
@@ -360,7 +368,7 @@ final class DashboardViewModel: ObservableObject {
         var newEfforts: [BestEffort] = []
         for activity in candidates {
             fetchedDetailActivityIDs.insert(activity.id)
-            guard let detail = try? await apiClient.fetchActivityDetail(id: activity.id) else { continue }
+            guard let detail = try? await prDetailClient.fetchActivityDetail(id: activity.id) else { continue }
             if let efforts = detail.bestEfforts {
                 newEfforts.append(contentsOf: efforts.filter { $0.prRank != nil })
             }

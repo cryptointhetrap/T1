@@ -1,7 +1,9 @@
 # Go Harder Ai Training
 
 An iOS app that connects to Strava to monitor your training, starting with a
-training load / trends dashboard. Built as two pieces:
+training load / trends dashboard — or, if you don't have Strava, pulls the
+same dashboard straight from workouts logged in Apple's Health app instead
+(see *Current features* below). Built as two pieces:
 
 - **`ios/`** — the SwiftUI app (native, App Store target).
 - **`backend/`** — a minimal Node/Express service that performs the Strava
@@ -21,7 +23,9 @@ app short-lived tokens.
 ## Getting started
 
 1. **Register a Strava API app**: https://www.strava.com/settings/api
-   (gives you a Client ID and Client Secret).
+   (gives you a Client ID and Client Secret). Skippable if you only plan
+   to use Apple Health Workouts instead of Strava — everything else in
+   this list still applies either way.
 2. **Get an Anthropic API key** (for the Coach chat tab): https://console.anthropic.com
 3. **(Optional) Set up a Google Cloud OAuth client** for Google Calendar
    sync — see `ios/README.md` → *Google Calendar setup*. Apple Health
@@ -39,7 +43,18 @@ app short-lived tokens.
 ## Current features (v1)
 
 - Connect/disconnect your Strava account (OAuth via
-  `ASWebAuthenticationSession`, tokens kept in the iOS Keychain)
+  `ASWebAuthenticationSession`, tokens kept in the iOS Keychain) — or,
+  from that same first screen, "Use Apple Health Workouts Instead" if you
+  don't have a Strava account. Weekly volume, By Sport totals, training
+  load trend, and the Calendar tab all run identically off whichever
+  source you pick. A handful of Strava-only features have no Apple
+  equivalent and are simply hidden in Apple Health Workouts mode: Recent
+  PRs and power/watts (Strava computes both from data Apple Health
+  doesn't have), Longest Efforts and Compare (both need Strava's full
+  activity history/API), and the AI workout-review push notification
+  below (triggered by Strava's webhook specifically). Switch back at any
+  time from the Stats tab's `•••` menu
+- Weekly training volume chart (distance/time/elevation)
 - Weekly training volume chart (distance/time/elevation)
 - By Sport section: weekly, monthly, and yearly totals broken out per
   sport — mileage and elevation gain (miles/feet) for Run, Bike, and
