@@ -23,6 +23,21 @@ and the **Anthropic API key** out of the iOS app.
   system prompt explicitly forbids misattributing invented lines to a
   named person. Shown on the app's launch splash, not a tab. The app
   caches the result locally and only calls this once per calendar day.
+- `POST /chat/workout-review` — given a plain-text summary of one
+  just-completed Strava activity (pace/speed, heart rate, elevation,
+  power, relative effort) plus whatever recent recovery/training-load
+  context the device has on hand (Apple Health sleep/resting heart rate/
+  HRV, intervals.icu CTL/ATL), returns a short AI review reacting to how
+  that workout went in light of the athlete's current recovery/load.
+  Triggered by the app in the background after a silent push (see "Push
+  notifications setup" below) — this endpoint itself never touches
+  HealthKit or intervals.icu data directly, the device gathers all of
+  that locally and sends only a plain-text summary.
+- `PUT` / `DELETE /push/:athleteID/token` — the app registers (or clears)
+  this device's APNs token here so the webhook handler below knows where
+  to send a silent push. Registering is what turns workout-review push
+  on for that athlete; there's no separate flag, just whether a token is
+  on file.
 - `PUT /feed/:token` / `GET /feed/:token.ics` — the one piece of state
   this backend holds. The app uploads its scheduled workouts (as plain
   JSON) to a random per-install token it generates itself; the `.ics`
@@ -54,7 +69,11 @@ and the **Anthropic API key** out of the iOS app.
   push straight to a specific phone (no APNs, no device-token registry),
   so instead the app polls the third, cheap route on foreground and only
   does a full Strava resync if there's actually something new. See
-  *Strava webhook setup* below.
+  *Strava webhook setup* below. When APNs is also configured (see *Push
+  notifications setup*) and the athlete has a registered device, a
+  genuinely new activity additionally gets a silent push, waking the app
+  to generate an AI workout-review notification — the polling above stays
+  the fallback either way.
 
 Everything else (Strava activities/stats, Apple Health, Google Calendar,
 Intervals.icu) is called by the iOS app **directly against those APIs** —
@@ -147,3 +166,40 @@ once against your deployed backend (not something the iOS app does):
 Skipping this step doesn't break anything — the app just won't get the
 foreground fast-path and falls back to its normal refresh cadence
 (pull-to-refresh, tab appearance).
+
+## Push notifications setup
+
+Entirely optional, and layered on top of the Strava webhook above (do that
+first — push notifications only fire off the `aspect_type === "create"`
+events it already receives). This is what lets the backend wake the app in
+the background to generate an AI workout review right after a new activity
+syncs, rather than the athlete having to open the app and wait.
+
+1. In [Apple Developer](https://developer.apple.com/account) → **Certificates,
+   Identifiers & Profiles → Keys**, create a new key with the **Apple Push
+   Notifications service (APNs)** capability checked. Download the `.p8`
+   file it gives you (only downloadable once) and note its **Key ID**.
+2. Note your **Team ID** (top right of the Apple Developer site, or
+   **Membership** in the sidebar).
+3. Set four environment variables on the backend (see `.env.example`):
+   `APNS_TEAM_ID`, `APNS_KEY_ID`, `APNS_AUTH_KEY_PATH` (path to the `.p8`
+   file on the server), and `APNS_BUNDLE_ID` (the iOS app's bundle ID,
+   e.g. `com.trainingmonitor.app` — must match exactly, it's used as the
+   APNs "topic").
+4. On the iOS side, add the **Push Notifications** capability to the
+   Xcode target and enable **Background Modes → Remote notifications**
+   (the checked-in `project.yml`/entitlements already declare these; if
+   you changed the bundle ID you may need to re-add the capability in
+   Xcode so it's provisioned on your Apple Developer account). The athlete
+   then turns workout reviews on from the Stats tab's `•••` menu.
+
+Leaving any of the four `APNS_*` variables unset is completely fine —
+`server.ts` only wires up the APNs client when all four are present, and
+the webhook route silently skips the push step otherwise. Nothing else in
+the backend depends on this.
+
+Apple's sandbox vs. production APNs environments are separate — a device
+running a debug build registers with `environment: "sandbox"`
+automatically (see `PushRegistrationClient` on the iOS side), and this
+backend picks the matching APNs host per registration, so no separate
+staging configuration is needed here.

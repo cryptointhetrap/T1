@@ -4,5 +4,12 @@
 <dict>
     <key>com.apple.developer.healthkit</key>
     <true/>
+    <!-- "development" talks to APNs' sandbox environment (matches Xcode
+         debug builds run from a device); switch to "production" before
+         archiving for TestFlight/App Store, or let Xcode manage this
+         automatically once the Push Notifications capability is enabled
+         with automatic signing. -->
+    <key>aps-environment</key>
+    <string>development</string>
 </dict>
 </plist>

@@ -27,14 +27,15 @@ A SwiftUI app that connects to Strava and Apple Health, across five tabs:
   group with other Go Harder Ai Training users, to see everyone's
   current-month relative effort, hours, and mileage side by side — see
   *Compare groups* below for why this isn't a general Strava
-  leaderboard. Three more connections, all optional, live behind this
+  leaderboard. Four more connections, all optional, live behind this
   tab's `•••` menu: Apple Health (sleep, resting heart rate, HRV, shown
   in a Recovery section and fed into the coach's context), Google
   Calendar (scheduled workouts are pushed there as real events, and
   Claude reads your upcoming events back so it can avoid double-booking
-  you), and Intervals.icu (a self-serve API key, no OAuth — pulls in its
+  you), Intervals.icu (a self-serve API key, no OAuth — pulls in its
   own CTL/ATL/form fitness-and-fatigue numbers, and pushes scheduled
-  workouts there too).
+  workouts there too), and Workout Reviews (push notifications — see
+  *Push notifications* below).
 - **Steps**: daily step count and walking/running distance from Apple
   Health (same HealthKit permission sheet as the Recovery section
   above), led by today's step count and mileage, then rolled up into
@@ -185,6 +186,39 @@ schema — if a field silently reads as missing, it likely means
 intervals.icu renamed or moved it and `IntervalsWellness` in
 `Models/IntervalsICUModels.swift` needs a small update.
 
+### Push notifications
+
+Turned on from the Stats tab's `•••` menu ("Enable Workout Reviews"),
+which just asks for the standard iOS notification permission and
+registers this device's APNs token with the backend
+(`PUT /push/:athleteID/token`). From there it's fully automatic: the
+backend's Strava webhook (see `backend/README.md` → *Strava webhook
+setup*) sends a silent push the moment a new activity syncs, which wakes
+the app in the background (`AppDelegate` + `WorkoutReviewGenerator`) to
+gather that workout's own performance plus whatever recent Apple
+Health/intervals.icu recovery data is available — entirely on-device,
+since HealthKit data never leaves the phone — ask the backend's
+`/chat/workout-review` for a short AI review, and post it as a
+notification. The review also stays visible afterward as a small
+"✨ ..." line under the matching activity in the Stats tab's recent-
+activities list (`WorkoutReviewStore`, on-device only).
+
+Requires the backend's optional APNs configuration (see
+`backend/README.md` → *Push notifications setup*) — four environment
+variables from an Apple Developer `.p8` auth key. Without that
+configuration the menu toggle still works (permission gets requested,
+the device still registers) but no push ever arrives, since the backend
+has nowhere to send it; everything else in the app is unaffected either
+way. On the Xcode side this needs the **Push Notifications** capability
+and **Background Modes → Remote notifications** enabled — both already
+declared in the checked-in `project.yml`/`Info.plist`/entitlements, so
+this is normally nothing you need to touch unless you changed the bundle
+ID (in which case re-add the capability in Xcode so it provisions under
+your own Apple Developer account). The `aps-environment` entitlement
+ships as `development` (sandbox) — switch it to `production` before
+archiving for TestFlight/App Store, or let Xcode manage it automatically
+with automatic signing.
+
 ### Compare groups
 
 No console setup, no accounts, no login — the Compare page lets you
@@ -239,7 +273,8 @@ triggers (pull-to-refresh, opening the Stats tab).
 
 ```
 TrainingMonitor/
-  App/            App entry point (@main)
+  App/            App entry point (@main), UIApplicationDelegateAdaptor
+                  shim for APNs callbacks
   Config/         Client ID / backend URL constants
   Models/         Codable Strava/Google API models, unit conversions
   Services/       Keychain, Strava + Google + Intervals.icu + Groups +
@@ -247,7 +282,9 @@ TrainingMonitor/
                   coach chat client, local scheduled-workout store +
                   calendar feed uploads, HealthKit manager, free-text
                   preferences store, group membership store, meal ratings
-                  store, weekly goals store
+                  store, weekly goals store, push-notification manager +
+                  device-token registration + AI workout-review generator
+                  and on-device store
   ViewModels/      Training-load + efficiency aggregation, calendar month
                   pagination, coach chat, Health, Steps, Meals, Google
                   Calendar, Intervals.icu, longest efforts, group compare

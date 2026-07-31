@@ -92,6 +92,15 @@ This must be an ORIGINAL line you write yourself, 1-2 sentences, under 240 chara
 
 const FALLBACK_QUOTE = "Show up. Do the work. That's the whole plan.";
 
+const WORKOUT_REVIEW_SYSTEM_PROMPT = `You are an experienced running and cycling coach writing a short, personal review of ONE just-completed workout for the athlete who did it. You'll be given that workout's own performance numbers (type, distance, pace/speed, heart rate, elevation, relative effort, power if available) plus whatever recent recovery and training-load context is available (sleep, resting heart rate, HRV, intervals.icu fitness/fatigue numbers) — some or all of that context may be missing if the athlete hasn't connected that data source.
+
+Write 2-4 sentences reacting specifically to how this workout went in light of how recovered or loaded the athlete currently is — e.g. call out a strong effort backed by good recovery, praise pushing through on poor sleep if it paid off, or flag that hammering a hard session on low HRV or high fatigue is worth backing off from next time. Cite the actual numbers you were given rather than being vague. Keep the tone direct and encouraging, the same no-excuses training mindset as the rest of this coaching app, but grounded strictly in the real data provided — never invent a number you weren't given, and say plainly if there isn't enough recovery data to say anything about that angle.
+
+Output only the review text itself — no preamble, no title, no markdown, no quotation marks.`;
+
+const FALLBACK_WORKOUT_REVIEW =
+  "Solid work getting that done. A full review couldn't be generated this time — check back after your next sync.";
+
 const MEALS_SYSTEM_PROMPT = `You generate daily meal suggestions for a fitness/training app. For each of Breakfast, Lunch, and Dinner, generate exactly 5 low-carb options and exactly 5 high-carb options (10 per meal, 30 total).
 
 Every option must be a real, familiar dish — the kind of thing a home cook can actually make from a normal recipe, or that a typical restaurant/delivery app would list. No invented fusion dishes, no unrealistic ingredient combinations, no vague descriptions like "protein bowl" — name the actual dish (e.g. "Grilled chicken Caesar salad", "Spaghetti and meatballs").
@@ -299,6 +308,54 @@ export function createChatRouter(apiKey: string): Router {
       );
       const quote = (textBlock?.text ?? "").trim();
       res.json({ quote: quote.length > 0 ? quote : FALLBACK_QUOTE });
+    } catch (err) {
+      if (err instanceof Anthropic.APIError) {
+        res.status(err.status ?? 502).json({ error: err.message });
+        return;
+      }
+      res.status(502).json({ error: "Unexpected error contacting Claude" });
+    }
+  });
+
+  router.post("/workout-review", async (req, res) => {
+    const { activitySummary, context } = req.body ?? {};
+    if (typeof activitySummary !== "string" || !activitySummary.trim()) {
+      res.status(400).json({ error: "Missing 'activitySummary' in request body" });
+      return;
+    }
+
+    try {
+      const response = await client.messages.create({
+        model: MODEL,
+        max_tokens: 400,
+        // A short reaction grounded in given numbers, not an open-ended
+        // reasoning task — keep it cheap and fast, same as /motivation.
+        thinking: { type: "disabled" },
+        output_config: { effort: "low" },
+        system: WORKOUT_REVIEW_SYSTEM_PROMPT,
+        messages: [
+          {
+            role: "user",
+            content: [
+              `Workout: ${activitySummary}`,
+              typeof context === "string" && context.length > 0
+                ? `Recovery/training context:\n${context}`
+                : "No recovery/training context available for this athlete.",
+            ].join("\n\n"),
+          },
+        ],
+      });
+
+      if (response.stop_reason === "refusal") {
+        res.json({ review: FALLBACK_WORKOUT_REVIEW });
+        return;
+      }
+
+      const textBlock = response.content.find(
+        (block): block is Anthropic.TextBlock => block.type === "text",
+      );
+      const review = (textBlock?.text ?? "").trim();
+      res.json({ review: review.length > 0 ? review : FALLBACK_WORKOUT_REVIEW });
     } catch (err) {
       if (err instanceof Anthropic.APIError) {
         res.status(err.status ?? 502).json({ error: err.message });

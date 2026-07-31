@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ActivityRow: View {
     let activity: StravaActivity
+    @ObservedObject private var reviewStore = WorkoutReviewStore.shared
 
     var body: some View {
         HStack {
@@ -11,6 +12,13 @@ struct ActivityRow: View {
                 Text(subtitle)
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                if let review = reviewStore.review(for: activity.id) {
+                    Label(review.text, systemImage: "sparkles")
+                        .font(.caption2)
+                        .foregroundStyle(Color.ghGreen)
+                        .lineLimit(3)
+                        .padding(.top, 2)
+                }
             }
             Spacer()
         }

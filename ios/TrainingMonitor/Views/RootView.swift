@@ -10,6 +10,7 @@ struct RootView: View {
     @StateObject private var intervalsICUViewModel = IntervalsICUViewModel()
     @StateObject private var preferencesStore = PreferencesStore()
     @StateObject private var goalsStore = GoalsStore()
+    @StateObject private var pushManager = PushNotificationManager.shared
     @StateObject private var motivationViewModel = MotivationViewModel()
     @State private var showLaunchSplash = true
 
@@ -30,6 +31,7 @@ struct RootView: View {
                         calendarViewModel: calendarViewModel,
                         intervalsICUViewModel: intervalsICUViewModel,
                         goalsStore: goalsStore,
+                        pushManager: pushManager,
                         apiClient: apiClient,
                         athleteID: authManager.session?.athleteID
                     )
@@ -62,9 +64,13 @@ struct RootView: View {
                     scheduledWorkoutStore.googleCalendarClient = googleCalendarAPIClient
                     scheduledWorkoutStore.intervalsICUClient = intervalsICUViewModel.client
                     scheduledWorkoutStore.calendarFeedClient = calendarFeedClient
+                    pushManager.setAthleteID(authManager.session?.athleteID)
                 }
                 .onChange(of: intervalsICUViewModel.isConnected) { _ in
                     scheduledWorkoutStore.intervalsICUClient = intervalsICUViewModel.client
+                }
+                .onChange(of: authManager.session?.athleteID) { newAthleteID in
+                    pushManager.setAthleteID(newAthleteID)
                 }
             } else {
                 ConnectStravaView()

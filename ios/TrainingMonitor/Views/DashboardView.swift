@@ -6,6 +6,7 @@ struct DashboardView: View {
     @ObservedObject private var calendarViewModel: GoogleCalendarViewModel
     @ObservedObject private var intervalsICUViewModel: IntervalsICUViewModel
     @ObservedObject private var goalsStore: GoalsStore
+    @ObservedObject private var pushManager: PushNotificationManager
     @StateObject private var groupCompareViewModel: GroupCompareViewModel
     let apiClient: StravaAPIClient
     @EnvironmentObject private var authManager: StravaAuthManager
@@ -19,6 +20,7 @@ struct DashboardView: View {
         calendarViewModel: GoogleCalendarViewModel,
         intervalsICUViewModel: IntervalsICUViewModel,
         goalsStore: GoalsStore,
+        pushManager: PushNotificationManager,
         apiClient: StravaAPIClient,
         athleteID: Int?
     ) {
@@ -27,6 +29,7 @@ struct DashboardView: View {
         self.calendarViewModel = calendarViewModel
         self.intervalsICUViewModel = intervalsICUViewModel
         self.goalsStore = goalsStore
+        self.pushManager = pushManager
         self.apiClient = apiClient
         _groupCompareViewModel = StateObject(wrappedValue: GroupCompareViewModel(athleteID: athleteID))
     }
@@ -129,6 +132,15 @@ struct DashboardView: View {
                                 showIntervalsSettings = true
                             }
                         }
+                        if pushManager.isEnabled {
+                            Button("Disable Workout Reviews", role: .destructive) {
+                                pushManager.disable()
+                            }
+                        } else {
+                            Button("Enable Workout Reviews") {
+                                Task { await pushManager.enable() }
+                            }
+                        }
                         Button("Disconnect Strava", role: .destructive) {
                             authManager.disconnect()
                         }
@@ -168,6 +180,11 @@ struct DashboardView: View {
                 Button("OK") { viewModel.errorMessage = nil }
             } message: {
                 Text(viewModel.errorMessage ?? "")
+            }
+            .alert("Push notifications", isPresented: .constant(pushManager.errorMessage != nil)) {
+                Button("OK") { pushManager.errorMessage = nil }
+            } message: {
+                Text(pushManager.errorMessage ?? "")
             }
         }
     }

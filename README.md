@@ -118,13 +118,22 @@ app short-lived tokens.
   or on demand. Thumbs up/down on any suggestion — rated dishes are
   remembered on-device and steer future suggestions toward what you've
   liked. Tap a suggestion for a recipe search or a delivery-app search
+- Push notifications (optional, turned on from the Stats tab's `•••`
+  menu): a Strava webhook wakes the app in the background right after a
+  new activity syncs, it gathers that workout's own performance plus
+  recent Apple Health sleep/recovery and intervals.icu fitness/fatigue
+  data — all on-device, none of it touches the backend — and Claude
+  writes a short review reacting to how the workout went in light of how
+  recovered you were. Shows as a notification and stays visible
+  afterward on the matching activity in the Stats tab's recent-activities
+  list. Requires the backend's optional APNs setup (see
+  `backend/README.md`); everything else works the same without it
 
 ## What's next
 
 This is intentionally a thin first slice. Natural next additions, roughly
 in order of how self-contained they are:
 
-- Push notifications (e.g. a weekly recap, or an overload warning)
 - Home screen widgets / Live Activities
 
 Integrations that exist but weren't added here because they require a

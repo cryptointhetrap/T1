@@ -96,13 +96,33 @@ struct StravaActivity: Codable, Identifiable {
 /// `GET /activities/{id}`, unlike everything else in this file which comes
 /// from the cheaper activity-list summaries) that this app uses: the
 /// athlete's best-effort times for standard distances within that activity,
-/// each flagged with its current all-time rank when it's a top-3 effort.
+/// each flagged with its current all-time rank when it's a top-3 effort,
+/// plus the same performance fields `StravaActivity` has (Strava's
+/// detailed response is a superset) — used by `WorkoutReviewGenerator` to
+/// summarize one specific just-synced activity without a second list call.
 struct StravaActivityDetail: Codable {
     let id: Int
+    let name: String
+    let type: String
+    let distance: Double // meters
+    let movingTime: Int // seconds
+    let totalElevationGain: Double // meters
+    let averageHeartrate: Double?
+    let averageWatts: Double?
+    let weightedAverageWatts: Double?
+    let deviceWatts: Bool?
+    let sufferScore: Double?
     let bestEfforts: [BestEffort]?
 
     enum CodingKeys: String, CodingKey {
-        case id
+        case id, name, type, distance
+        case movingTime = "moving_time"
+        case totalElevationGain = "total_elevation_gain"
+        case averageHeartrate = "average_heartrate"
+        case averageWatts = "average_watts"
+        case weightedAverageWatts = "weighted_average_watts"
+        case deviceWatts = "device_watts"
+        case sufferScore = "suffer_score"
         case bestEfforts = "best_efforts"
     }
 }
