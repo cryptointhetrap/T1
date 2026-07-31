@@ -7,14 +7,14 @@ struct ConnectStravaView: View {
         VStack(spacing: 24) {
             Spacer()
 
-            Image(systemName: "figure.run.circle.fill")
+            Image("Logo")
                 .resizable()
                 .scaledToFit()
-                .frame(width: 96, height: 96)
-                .foregroundStyle(.orange)
+                .frame(width: 120, height: 120)
+                .clipShape(RoundedRectangle(cornerRadius: 24))
 
             VStack(spacing: 8) {
-                Text("TrainingMonitor")
+                Text("Go Harder Ai Training")
                     .font(.title.bold())
                 Text("Connect your Strava account to see your training load and trends.")
                     .font(.subheadline)
