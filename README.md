@@ -1,4 +1,4 @@
-# TrainingMonitor
+# Go Harder Ai Training
 
 An iOS app that connects to Strava to monitor your training, starting with a
 training load / trends dashboard. Built as two pieces:

@@ -5,7 +5,7 @@
     <key>CFBundleDevelopmentRegion</key>
     <string>en</string>
     <key>CFBundleDisplayName</key>
-    <string>TrainingMonitor</string>
+    <string>Go Harder Ai Training</string>
     <key>CFBundleExecutable</key>
     <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleIdentifier</key>
@@ -23,7 +23,7 @@
     <key>LSRequiresIPhoneOS</key>
     <true/>
     <key>NSHealthShareUsageDescription</key>
-    <string>TrainingMonitor reads your sleep and heart-rate data from Health to factor recovery into your coaching.</string>
+    <string>Go Harder Ai Training reads your sleep and heart-rate data from Health to factor recovery into your coaching.</string>
     <key>UILaunchScreen</key>
     <dict/>
     <key>UISupportedInterfaceOrientations</key>

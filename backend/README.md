@@ -1,4 +1,4 @@
-# TrainingMonitor backend
+# Go Harder Ai Training backend
 
 A minimal Express service with two jobs: keep the Strava **client secret**
 and the **Anthropic API key** out of the iOS app.

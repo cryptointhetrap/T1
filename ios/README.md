@@ -1,4 +1,4 @@
-# TrainingMonitor (iOS)
+# Go Harder Ai Training (iOS)
 
 A SwiftUI app that connects to Strava and shows a training load / trends
 dashboard: weekly volume (distance/time/elevation), a Bike & Run section
@@ -28,7 +28,8 @@ most recently synced runs. A "Longest Efforts" row on the Stats tab
 opens a separate page ranking your top 10 longest runs and top 10 longest
 rides across your entire Strava history (not just the ~370-day window
 everything else on the dashboard uses). A "Compare" row opens a page for
-creating or joining a small invite-code group with other TrainingMonitor
+creating or joining a small invite-code group with other Go Harder Ai
+Training
 users, to see everyone's current-month relative effort, hours, and
 mileage side by side — see *Compare groups* below for why this isn't a
 general Strava leaderboard. The Coach tab has a free-text
@@ -88,9 +89,9 @@ In Xcode:
    automatic signing Xcode enables the capability on your App ID the
    first time it builds. With manual signing you'll need to add it to the
    App ID yourself in the Apple Developer portal first.
-3. Add a real 1024x1024 app icon to
-   `TrainingMonitor/Assets.xcassets/AppIcon.appiconset` before shipping —
-   a placeholder Contents.json is there but no image yet.
+3. The app icon (`TrainingMonitor/Assets.xcassets/AppIcon.appiconset`) is
+   already set to the Go Harder Ai Training logo — swap the image there if
+   you want a different one before shipping.
 
 ## Before it will run
 
