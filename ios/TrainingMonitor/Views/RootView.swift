@@ -21,6 +21,8 @@ struct RootView: View {
                 let calendarViewModel = GoogleCalendarViewModel(authManager: googleAuthManager, apiClient: googleCalendarAPIClient)
 
                 TabView {
+                    MotivationView(viewModel: motivationViewModel)
+                        .tabItem { Label("Motivation", systemImage: "flame") }
                     DashboardView(
                         viewModel: dashboardViewModel,
                         healthViewModel: healthViewModel,
@@ -47,8 +49,6 @@ struct RootView: View {
                         )
                     )
                     .tabItem { Label("Coach", systemImage: "bubble.left.and.bubble.right") }
-                    MotivationView(viewModel: motivationViewModel)
-                        .tabItem { Label("Motivation", systemImage: "flame") }
                 }
                 .onAppear {
                     scheduledWorkoutStore.googleCalendarClient = googleCalendarAPIClient
