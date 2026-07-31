@@ -103,8 +103,9 @@ app short-lived tokens.
   Bryant, or anyone real; it's an original line in that spirit, not
   something put in either of their mouths
 - Steps tab: daily step count and walking/running mileage from Apple
-  Health, rolled up into this week/month/year totals plus a rolling
-  365-day daily average, with a 30-day step chart
+  Health, leading with today's count, then rolled up into this
+  week/month/year totals plus a rolling 365-day daily average, with a
+  30-day step chart
 - Meals tab: 5 low-carb and 5 high-carb Claude-generated suggestions for
   each of breakfast, lunch, and dinner (30 a day), refreshed once daily
   or on demand. Thumbs up/down on any suggestion — rated dishes are

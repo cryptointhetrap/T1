@@ -43,11 +43,12 @@ A SwiftUI app that connects to Strava and Apple Health, across six tabs:
   workouts there too).
 - **Steps**: daily step count and walking/running distance from Apple
   Health (same HealthKit permission sheet as the Recovery section
-  above), rolled up into this week/this month/this year totals plus a
-  rolling 365-day daily average — a stable "typical day" number that
-  doesn't swing early in January the way a year-to-date average would —
-  and a 30-day step chart. Folded into the coach's context alongside the
-  other Health data.
+  above), led by today's step count and mileage, then rolled up into
+  this week/this month/this year totals plus a rolling 365-day daily
+  average — a stable "typical day" number that doesn't swing early in
+  January the way a year-to-date average would — and a 30-day step
+  chart. Folded into the coach's context alongside the other Health
+  data.
 - **Meals**: Claude generates 5 low-carb and 5 high-carb suggestions for
   each of breakfast/lunch/dinner every day (30 total) — real, familiar
   dishes, not invented ones — refreshed automatically once a day (cached

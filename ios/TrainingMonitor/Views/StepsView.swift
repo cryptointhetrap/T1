@@ -8,6 +8,8 @@ struct StepsView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
                     if viewModel.isAuthorized {
+                        todayCard
+
                         VStack(spacing: 0) {
                             row(label: "This week", totals: viewModel.weekly)
                             Divider()
@@ -59,6 +61,30 @@ struct StepsView: View {
             } message: {
                 Text(viewModel.errorMessage ?? "")
             }
+        }
+    }
+
+    @ViewBuilder
+    private var todayCard: some View {
+        if let today = viewModel.today {
+            VStack(alignment: .leading, spacing: 6) {
+                Label("Today", systemImage: "figure.walk")
+                    .font(.subheadline.bold())
+                    .foregroundStyle(.secondary)
+                HStack(alignment: .lastTextBaseline, spacing: 6) {
+                    Text(today.steps.formatted())
+                        .font(.system(size: 40, weight: .bold, design: .rounded))
+                    Text("steps")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                Text(Units.formattedMiles(today.distanceMeters))
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding()
+            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14))
         }
     }
 

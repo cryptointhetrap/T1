@@ -22,6 +22,7 @@ struct DailyStepPoint: Identifiable {
 final class StepsViewModel: ObservableObject {
     @Published private(set) var isAuthorized = false
     @Published private(set) var isLoading = false
+    @Published private(set) var today: StepPeriodTotals?
     @Published private(set) var weekly: StepPeriodTotals?
     @Published private(set) var monthly: StepPeriodTotals?
     @Published private(set) var yearly: StepPeriodTotals?
@@ -71,10 +72,12 @@ final class StepsViewModel: ObservableObject {
     private func computeTotals(steps: [Date: Double], distance: [Date: Double], rangeStart: Date, rangeEnd: Date) {
         let calendar = Calendar.current
         let now = Date()
+        let todayStart = calendar.startOfDay(for: now)
         let weekStart = calendar.dateInterval(of: .weekOfYear, for: now)?.start ?? now
         let monthStart = calendar.dateInterval(of: .month, for: now)?.start ?? now
         let yearStart = calendar.date(from: calendar.dateComponents([.year], from: now)) ?? now
 
+        today = Self.totals(steps: steps, distance: distance, since: todayStart)
         weekly = Self.totals(steps: steps, distance: distance, since: weekStart)
         monthly = Self.totals(steps: steps, distance: distance, since: monthStart)
         yearly = Self.totals(steps: steps, distance: distance, since: yearStart)
@@ -105,6 +108,7 @@ final class StepsViewModel: ObservableObject {
         guard isAuthorized else { return "" }
 
         var lines: [String] = []
+        if let today { lines.append("Today: \(today.steps) steps, \(Units.formattedMiles(today.distanceMeters))") }
         if let weekly { lines.append("This week: \(weekly.steps) steps, \(Units.formattedMiles(weekly.distanceMeters))") }
         if let monthly { lines.append("This month: \(monthly.steps) steps, \(Units.formattedMiles(monthly.distanceMeters))") }
         if let yearly { lines.append("This year: \(yearly.steps) steps, \(Units.formattedMiles(yearly.distanceMeters))") }
