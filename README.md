@@ -105,6 +105,11 @@ app short-lived tokens.
 - Steps tab: daily step count and walking/running mileage from Apple
   Health, rolled up into this week/month/year totals plus a rolling
   365-day daily average, with a 30-day step chart
+- Meals tab: 5 low-carb and 5 high-carb Claude-generated suggestions for
+  each of breakfast, lunch, and dinner (30 a day), refreshed once daily
+  or on demand. Thumbs up/down on any suggestion — rated dishes are
+  remembered on-device and steer future suggestions toward what you've
+  liked. Tap a suggestion for a recipe search or a delivery-app search
 
 ## What's next
 

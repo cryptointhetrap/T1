@@ -1,6 +1,6 @@
 # Go Harder Ai Training (iOS)
 
-A SwiftUI app that connects to Strava and Apple Health, across five tabs:
+A SwiftUI app that connects to Strava and Apple Health, across six tabs:
 
 - **Motivation** (first tab): one short, original Claude-written line in
   an intense, no-excuses training mindset — refreshed automatically once
@@ -48,6 +48,20 @@ A SwiftUI app that connects to Strava and Apple Health, across five tabs:
   doesn't swing early in January the way a year-to-date average would —
   and a 30-day step chart. Folded into the coach's context alongside the
   other Health data.
+- **Meals**: Claude generates 5 low-carb and 5 high-carb suggestions for
+  each of breakfast/lunch/dinner every day (30 total) — real, familiar
+  dishes, not invented ones — refreshed automatically once a day (cached
+  on-device like the Motivation tab) or on demand from the refresh
+  button. Thumbs up/down on any suggestion; rated dishes are remembered
+  on-device and sent back as steering context on future requests, so the
+  picks drift toward what you've liked and away from what you haven't —
+  no backend state, the same "context, not database" personalization
+  approach as the rest of this app. Tap a suggestion for two links: a
+  recipe search ("how to make it") and a delivery search ("order it").
+  Both are search-results links rather than a guessed direct URL —
+  Claude can't guarantee a real recipe page exists at a made-up address,
+  and DoorDash's internal link scheme isn't something to hardcode a
+  guess at, so a search is the honest, always-valid choice.
 - **Calendar**: scrolls back through your entire Strava history, month
   by month, with a dot per day for each sport you did that day — tap a
   day to see its activities. Can hand you a subscribable `.ics` feed URL
@@ -222,14 +236,15 @@ TrainingMonitor/
   App/            App entry point (@main)
   Config/         Client ID / backend URL constants
   Models/         Codable Strava/Google API models, unit conversions
-  Services/       Keychain, Strava + Google + Intervals.icu + Groups
-                  clients, backend client, webhook status polling, coach
-                  chat client, local scheduled-workout store + calendar
-                  feed uploads, HealthKit manager, free-text preferences
-                  store, group membership store
+  Services/       Keychain, Strava + Google + Intervals.icu + Groups +
+                  Meals clients, backend client, webhook status polling,
+                  coach chat client, local scheduled-workout store +
+                  calendar feed uploads, HealthKit manager, free-text
+                  preferences store, group membership store, meal ratings
+                  store
   ViewModels/      Training-load + efficiency aggregation, calendar month
-                  pagination, coach chat, Health, Steps, Google Calendar,
-                  Intervals.icu, longest efforts, group compare
+                  pagination, coach chat, Health, Steps, Meals, Google
+                  Calendar, Intervals.icu, longest efforts, group compare
   Views/          SwiftUI screens and chart components
 ```
 

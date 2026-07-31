@@ -5,6 +5,7 @@ struct RootView: View {
     @StateObject private var scheduledWorkoutStore = ScheduledWorkoutStore()
     @StateObject private var healthViewModel = HealthViewModel()
     @StateObject private var stepsViewModel = StepsViewModel()
+    @StateObject private var mealsViewModel = MealsViewModel()
     @StateObject private var googleAuthManager = GoogleAuthManager()
     @StateObject private var intervalsICUViewModel = IntervalsICUViewModel()
     @StateObject private var preferencesStore = PreferencesStore()
@@ -35,6 +36,8 @@ struct RootView: View {
                     .tabItem { Label("Stats", systemImage: "chart.bar") }
                     StepsView(viewModel: stepsViewModel)
                         .tabItem { Label("Steps", systemImage: "figure.walk") }
+                    MealsView(viewModel: mealsViewModel)
+                        .tabItem { Label("Meals", systemImage: "fork.knife") }
                     CalendarView(
                         viewModel: CalendarViewModel(apiClient: apiClient),
                         scheduledWorkoutStore: scheduledWorkoutStore,
