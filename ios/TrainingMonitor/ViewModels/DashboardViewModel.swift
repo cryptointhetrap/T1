@@ -472,6 +472,30 @@ final class DashboardViewModel: ObservableObject {
         return lines.joined(separator: "\n")
     }
 
+    /// Progress against the athlete's own weekly targets (`GoalsStore`), for
+    /// the coach chat context — same "current calendar week" totals the
+    /// Stats tab's rings (`WeeklyGoalRings`) show. Empty string if no goal
+    /// is set at all.
+    func goalsSummaryText(_ goals: WeeklyGoals) -> String {
+        guard !goals.isEmpty else { return "" }
+        let week = weeklySummaries.last
+
+        var lines = ["Weekly goals (progress so far this calendar week):"]
+        if let target = goals.distanceMiles {
+            let actual = Units.miles(fromMeters: week?.distanceMeters ?? 0)
+            lines.append("- Distance: \(String(format: "%.1f", actual)) / \(String(format: "%.0f", target)) mi")
+        }
+        if let target = goals.timeHours {
+            let actual = week?.movingTimeHours ?? 0
+            lines.append("- Time: \(String(format: "%.1f", actual)) / \(String(format: "%.0f", target)) h")
+        }
+        if let target = goals.elevationFeet {
+            let actual = Units.feet(fromMeters: week?.elevationGainMeters ?? 0)
+            lines.append("- Elevation: \(String(format: "%.0f", actual)) / \(String(format: "%.0f", target)) ft")
+        }
+        return lines.joined(separator: "\n")
+    }
+
     private static func formattedDuration(_ seconds: Int) -> String {
         let hours = seconds / 3600
         let minutes = (seconds % 3600) / 60

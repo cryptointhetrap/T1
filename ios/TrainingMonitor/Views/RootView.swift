@@ -9,6 +9,7 @@ struct RootView: View {
     @StateObject private var googleAuthManager = GoogleAuthManager()
     @StateObject private var intervalsICUViewModel = IntervalsICUViewModel()
     @StateObject private var preferencesStore = PreferencesStore()
+    @StateObject private var goalsStore = GoalsStore()
     @StateObject private var motivationViewModel = MotivationViewModel()
     @State private var showLaunchSplash = true
 
@@ -28,6 +29,7 @@ struct RootView: View {
                         healthViewModel: healthViewModel,
                         calendarViewModel: calendarViewModel,
                         intervalsICUViewModel: intervalsICUViewModel,
+                        goalsStore: goalsStore,
                         apiClient: apiClient,
                         athleteID: authManager.session?.athleteID
                     )
@@ -50,7 +52,8 @@ struct RootView: View {
                             stepsViewModel: stepsViewModel,
                             calendarViewModel: calendarViewModel,
                             intervalsICUViewModel: intervalsICUViewModel,
-                            preferencesStore: preferencesStore
+                            preferencesStore: preferencesStore,
+                            goalsStore: goalsStore
                         )
                     )
                     .tabItem { Label("Coach", systemImage: "bubble.left.and.bubble.right") }

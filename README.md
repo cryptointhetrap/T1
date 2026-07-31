@@ -96,6 +96,12 @@ app short-lived tokens.
   `backend/README.md`): the app checks a cheap status endpoint on
   foreground and only does a full resync when something's actually
   changed, instead of always re-fetching your whole activity list
+- Weekly goals: set your own weekly distance/time/elevation targets (any
+  or all of the three, each optional) from the Stats tab, tracked as
+  concentric progress rings against the current calendar week's actual
+  totals. No backend involvement — targets are stored on-device
+  (`UserDefaults`) and folded into the coach's context so Claude knows
+  how you're tracking against them
 - Motivation: a full-screen splash that shows briefly while the app
   launches, with one short, original Claude-written line in an intense,
   no-excuses training mindset — refreshed once a day automatically, and
@@ -118,7 +124,6 @@ app short-lived tokens.
 This is intentionally a thin first slice. Natural next additions, roughly
 in order of how self-contained they are:
 
-- Weekly goal setting + progress rings
 - Push notifications (e.g. a weekly recap, or an overload warning)
 - Home screen widgets / Live Activities
 

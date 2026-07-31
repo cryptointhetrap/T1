@@ -5,17 +5,20 @@ struct DashboardView: View {
     @ObservedObject private var healthViewModel: HealthViewModel
     @ObservedObject private var calendarViewModel: GoogleCalendarViewModel
     @ObservedObject private var intervalsICUViewModel: IntervalsICUViewModel
+    @ObservedObject private var goalsStore: GoalsStore
     @StateObject private var groupCompareViewModel: GroupCompareViewModel
     let apiClient: StravaAPIClient
     @EnvironmentObject private var authManager: StravaAuthManager
     @Environment(\.scenePhase) private var scenePhase
     @State private var showIntervalsSettings = false
+    @State private var showGoalsSettings = false
 
     init(
         viewModel: DashboardViewModel,
         healthViewModel: HealthViewModel,
         calendarViewModel: GoogleCalendarViewModel,
         intervalsICUViewModel: IntervalsICUViewModel,
+        goalsStore: GoalsStore,
         apiClient: StravaAPIClient,
         athleteID: Int?
     ) {
@@ -23,6 +26,7 @@ struct DashboardView: View {
         self.healthViewModel = healthViewModel
         self.calendarViewModel = calendarViewModel
         self.intervalsICUViewModel = intervalsICUViewModel
+        self.goalsStore = goalsStore
         self.apiClient = apiClient
         _groupCompareViewModel = StateObject(wrappedValue: GroupCompareViewModel(athleteID: athleteID))
     }
@@ -33,6 +37,10 @@ struct DashboardView: View {
                 VStack(alignment: .leading, spacing: 24) {
                     if let status = viewModel.trainingStatus, let ratio = viewModel.acuteChronicRatio {
                         trainingStatusBanner(status: status, ratio: ratio)
+                    }
+
+                    section(title: "Weekly Goal") {
+                        weeklyGoalSection
                     }
 
                     section(title: "Recovery") {
@@ -132,6 +140,9 @@ struct DashboardView: View {
             .sheet(isPresented: $showIntervalsSettings) {
                 IntervalsICUSettingsView(viewModel: intervalsICUViewModel)
             }
+            .sheet(isPresented: $showGoalsSettings) {
+                GoalsSettingsView(store: goalsStore)
+            }
             .refreshable {
                 await viewModel.refresh()
                 await intervalsICUViewModel.refresh()
@@ -185,6 +196,25 @@ struct DashboardView: View {
                 value: "\(last7?.activityCount ?? 0)",
                 systemImage: "checkmark.circle"
             )
+        }
+    }
+
+    @ViewBuilder
+    private var weeklyGoalSection: some View {
+        if goalsStore.goals.isEmpty {
+            Button {
+                showGoalsSettings = true
+            } label: {
+                Label("Set weekly goals", systemImage: "flag.checkered")
+            }
+            .buttonStyle(.bordered)
+        } else {
+            VStack(alignment: .leading, spacing: 12) {
+                WeeklyGoalRings(goals: goalsStore.goals, week: viewModel.weeklySummaries.last)
+                Button("Edit goals") { showGoalsSettings = true }
+                    .font(.caption)
+                    .foregroundStyle(Color.ghGreen)
+            }
         }
     }
 

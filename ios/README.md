@@ -19,6 +19,10 @@ A SwiftUI app that connects to Strava and Apple Health, across five tabs:
   longest swims across your entire Strava history (not just the
   ~370-day window everything else on the dashboard uses — Weight
   Training isn't ranked there, since it has no distance to rank by). A
+  "Weekly Goal" section lets you set your own weekly distance/time/
+  elevation targets (each optional independently) and shows progress as
+  three concentric rings against the current calendar week's actual
+  totals — leave a target unset and its ring just shows an empty track. A
   "Compare" row opens a page for creating or joining a small invite-code
   group with other Go Harder Ai Training users, to see everyone's
   current-month relative effort, hours, and mileage side by side — see
@@ -62,8 +66,8 @@ A SwiftUI app that connects to Strava and Apple Health, across five tabs:
   cheap foreground check here and only does a full resync when
   something's actually new.
 - **Coach**: a chat with Claude, grounded in the same training, Health,
-  and steps data shown elsewhere in the app, for reviewing workouts and
-  trends. Claude can also schedule, move, or cancel future workouts,
+  steps, and weekly-goal-progress data shown elsewhere in the app, for
+  reviewing workouts and trends. Claude can also schedule, move, or cancel future workouts,
   which then show up as hollow calendar markers on the Calendar tab
   alongside completed activities. Has a free-text goals & preferences
   box (target-icon button) for anything you want the coach to factor
@@ -243,7 +247,7 @@ TrainingMonitor/
                   coach chat client, local scheduled-workout store +
                   calendar feed uploads, HealthKit manager, free-text
                   preferences store, group membership store, meal ratings
-                  store
+                  store, weekly goals store
   ViewModels/      Training-load + efficiency aggregation, calendar month
                   pagination, coach chat, Health, Steps, Meals, Google
                   Calendar, Intervals.icu, longest efforts, group compare

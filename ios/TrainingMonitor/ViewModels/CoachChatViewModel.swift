@@ -14,6 +14,7 @@ final class CoachChatViewModel: ObservableObject {
     private let calendarViewModel: GoogleCalendarViewModel
     private let intervalsICUViewModel: IntervalsICUViewModel
     let preferencesStore: PreferencesStore
+    private let goalsStore: GoalsStore
 
     init(
         dashboardViewModel: DashboardViewModel,
@@ -22,7 +23,8 @@ final class CoachChatViewModel: ObservableObject {
         stepsViewModel: StepsViewModel,
         calendarViewModel: GoogleCalendarViewModel,
         intervalsICUViewModel: IntervalsICUViewModel,
-        preferencesStore: PreferencesStore
+        preferencesStore: PreferencesStore,
+        goalsStore: GoalsStore
     ) {
         self.dashboardViewModel = dashboardViewModel
         self.scheduledWorkoutStore = scheduledWorkoutStore
@@ -31,6 +33,7 @@ final class CoachChatViewModel: ObservableObject {
         self.calendarViewModel = calendarViewModel
         self.intervalsICUViewModel = intervalsICUViewModel
         self.preferencesStore = preferencesStore
+        self.goalsStore = goalsStore
     }
 
     /// Refreshes upcoming Google Calendar events and intervals.icu wellness
@@ -53,6 +56,7 @@ final class CoachChatViewModel: ObservableObject {
         do {
             let context = [
                 dashboardViewModel.trainingSummaryText(),
+                dashboardViewModel.goalsSummaryText(goalsStore.goals),
                 scheduleContextText(),
                 healthViewModel.summaryText(),
                 stepsViewModel.summaryText(),
