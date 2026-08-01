@@ -19,8 +19,8 @@ final class MealsViewModel: ObservableObject {
         let meals: DailyMeals
     }
 
-    init(ratingsStore: MealRatingsStore = MealRatingsStore()) {
-        self.ratingsStore = ratingsStore
+    init(ratingsStore: MealRatingsStore? = nil) {
+        self.ratingsStore = ratingsStore ?? MealRatingsStore()
         meals = Self.cachedMealsForToday()
     }
 
